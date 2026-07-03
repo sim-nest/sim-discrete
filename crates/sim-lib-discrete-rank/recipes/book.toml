@@ -1,0 +1,5 @@
+book = "discrete-rank"
+title = "Discrete Rank"
+summary = "Rank-space descriptors for discrete objects."
+order = 334
+chapters = ["01-basics"]

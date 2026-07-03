@@ -1,0 +1,8 @@
+id = "fwht-signal"
+title = "FWHT signal descriptor"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["discrete", "fwht", "spectral"]
+requires = ["discrete-spectral", "codec/lisp"]

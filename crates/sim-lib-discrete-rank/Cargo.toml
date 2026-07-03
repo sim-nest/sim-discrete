@@ -1,0 +1,22 @@
+[package]
+name = "sim-lib-discrete-rank"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Discrete rank adapters."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-discrete"
+homepage = "https://github.com/sim-nest/sim-discrete"
+
+[dependencies]
+num-bigint = "0.4"
+sim-lib-discrete-algebra = { version = "0.1.0", path = "../sim-lib-discrete-algebra" }
+sim-lib-discrete-comb = { version = "0.1.0", path = "../sim-lib-discrete-comb" }
+sim-lib-discrete-graph = { version = "0.1.0", path = "../sim-lib-discrete-graph" }
+sim-lib-discrete-spectral = { version = "0.1.0", path = "../sim-lib-discrete-spectral" }
+sim-lib-rank = { version = "0.1.0" }
+thiserror = "1"
+
+[lints]
+workspace = true

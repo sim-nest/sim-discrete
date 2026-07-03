@@ -1,0 +1,5 @@
+book = "discrete-graph"
+title = "Discrete Graph"
+summary = "Graph, edge, traversal, and certificate descriptors."
+order = 333
+chapters = ["01-basics"]

@@ -1,0 +1,1 @@
+(quote (#(discrete/Graph v1 "#(discrete/graph v1 undirected 3 [0 1 1 1 2 2])") #(discrete/Edge v1 "#(discrete/edge v1 0 0 1 1)") bfs mst))

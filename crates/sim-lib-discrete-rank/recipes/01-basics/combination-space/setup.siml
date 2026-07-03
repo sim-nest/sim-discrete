@@ -1,0 +1,1 @@
+(quote (#(discrete/CombinationSpace v1 "#(discrete/rank-space v1 combination [6 3])") rank #(discrete/Combination v1 "#(discrete/combination v1 6 3 [0 2 4])")))

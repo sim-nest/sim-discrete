@@ -1,0 +1,21 @@
+
+[workspace]
+resolver = "3"
+members = [
+  "crates/sim-lib-discrete",
+  "crates/sim-lib-discrete-algebra",
+  "crates/sim-lib-discrete-comb",
+  "crates/sim-lib-discrete-graph",
+  "crates/sim-lib-discrete-rank",
+  "crates/sim-lib-discrete-spectral",
+  "xtask",
+]
+
+[workspace.package]
+edition = "2024"
+license = "MPL-2.0"
+repository = "https://github.com/sim-nest/sim-discrete"
+homepage = "https://github.com/sim-nest/sim-discrete"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

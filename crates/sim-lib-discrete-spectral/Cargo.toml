@@ -1,0 +1,17 @@
+[package]
+name = "sim-lib-discrete-spectral"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Discrete spectral atlas."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-discrete"
+homepage = "https://github.com/sim-nest/sim-discrete"
+
+[dependencies]
+sim-lib-discrete-algebra = { version = "0.1.0", path = "../sim-lib-discrete-algebra" }
+thiserror = "1"
+
+[lints]
+workspace = true

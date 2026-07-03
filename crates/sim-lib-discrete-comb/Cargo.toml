@@ -1,0 +1,17 @@
+[package]
+name = "sim-lib-discrete-comb"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Discrete combinatorics."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-discrete"
+homepage = "https://github.com/sim-nest/sim-discrete"
+
+[dependencies]
+num-bigint = "0.4"
+thiserror = "1"
+
+[lints]
+workspace = true

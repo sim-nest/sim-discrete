@@ -1,0 +1,8 @@
+id = "rankable-values"
+title = "Rankable combinatorial values"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["discrete", "combination", "permutation"]
+requires = ["discrete-comb", "codec/lisp"]

@@ -1,0 +1,5 @@
+book = "discrete-algebra"
+title = "Discrete Algebra"
+summary = "Small semiring and matrix-view descriptors."
+order = 331
+chapters = ["01-basics"]

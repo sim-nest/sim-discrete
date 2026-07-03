@@ -1,0 +1,8 @@
+id = "semiring-matrix"
+title = "Semiring matrix descriptor"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["discrete", "algebra", "matrix"]
+requires = ["discrete-algebra", "codec/lisp"]

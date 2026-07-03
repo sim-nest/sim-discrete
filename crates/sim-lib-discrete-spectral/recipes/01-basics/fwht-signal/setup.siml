@@ -1,0 +1,1 @@
+(quote (#(discrete/FwhtSignal v1 "#(discrete/fwht-signal v1 natural none [1 0 0 0])") fwht energy signature))

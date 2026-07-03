@@ -1,0 +1,5 @@
+book = "discrete"
+title = "Discrete"
+summary = "Runtime-facing discrete matrix, graph, and transform descriptors."
+order = 330
+chapters = ["01-basics"]

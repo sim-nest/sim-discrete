@@ -1,0 +1,41 @@
+[package]
+name = "sim-lib-discrete"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Discrete-math family facade."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-discrete"
+homepage = "https://github.com/sim-nest/sim-discrete"
+
+[dependencies]
+sim-citizen = { optional = true, version = "0.1.0" }
+sim-citizen-derive = { optional = true, version = "0.1.0" }
+sim-kernel = { optional = true, version = "0.1.0" }
+sim-lib-core = { optional = true, version = "0.1.0" }
+sim-lib-discrete-algebra = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-algebra" }
+sim-lib-discrete-comb = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-comb" }
+sim-lib-discrete-graph = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-graph" }
+sim-lib-discrete-rank = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-rank" }
+sim-lib-discrete-spectral = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-spectral" }
+thiserror = "1"
+
+[dev-dependencies]
+sim-codec = { version = "0.1.0" }
+sim-codec-lisp = { version = "0.1.0" }
+sim-test-support = { version = "0.1.0" }
+
+[features]
+algebra = ["dep:sim-lib-discrete-algebra"]
+citizen = ["rank", "dep:sim-citizen", "dep:sim-citizen-derive", "dep:sim-kernel"]
+comb = ["dep:sim-lib-discrete-comb"]
+default = []
+full = ["algebra", "graph", "comb", "spectral"]
+graph = ["algebra", "dep:sim-lib-discrete-graph"]
+rank = ["algebra", "graph", "comb", "spectral", "dep:sim-lib-discrete-rank"]
+runtime = ["full", "dep:sim-kernel", "dep:sim-lib-core"]
+spectral = ["algebra", "dep:sim-lib-discrete-spectral"]
+
+[lints]
+workspace = true

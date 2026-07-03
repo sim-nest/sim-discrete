@@ -1,0 +1,5 @@
+book = "discrete-comb"
+title = "Discrete Combinatorics"
+summary = "Combination and permutation descriptors."
+order = 332
+chapters = ["01-basics"]

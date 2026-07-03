@@ -1,0 +1,5 @@
+book = "discrete-spectral"
+title = "Discrete Spectral"
+summary = "FWHT, Walsh signature, and spectral descriptor examples."
+order = 335
+chapters = ["01-basics"]
