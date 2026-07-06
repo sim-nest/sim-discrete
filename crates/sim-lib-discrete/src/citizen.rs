@@ -68,7 +68,7 @@ macro_rules! form_citizen {
                     Expr::String(value) => super::$canonical(value),
                     other => Err(Error::Eval(format!(
                         "discrete citizen form must be a string, found {}",
-                        super::expr_kind(other)
+                        sim_value::kind::expr_kind(other)
                     ))),
                 }
             }
@@ -358,24 +358,4 @@ fn discrete_graph_error(error: sim_lib_discrete_graph::GraphError) -> Error {
         Symbol::qualified("discrete", "graph"),
         error.to_string(),
     )
-}
-
-fn expr_kind(expr: &Expr) -> &'static str {
-    match expr {
-        Expr::Nil => "nil",
-        Expr::Bool(_) => "bool",
-        Expr::Number(_) => "number",
-        Expr::Symbol(_) => "symbol",
-        Expr::Local(_) => "local",
-        Expr::String(_) => "string",
-        Expr::Bytes(_) => "bytes",
-        Expr::List(_) => "list",
-        Expr::Vector(_) => "vector",
-        Expr::Map(_) => "map",
-        Expr::Set(_) => "set",
-        Expr::Call { .. } => "call",
-        Expr::Infix { .. } => "infix",
-        Expr::Extension { .. } => "extension",
-        _ => "expr",
-    }
 }

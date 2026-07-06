@@ -19,6 +19,7 @@ sim-lib-discrete-comb = { version = "0.1.0", optional = true, path = "../sim-lib
 sim-lib-discrete-graph = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-graph" }
 sim-lib-discrete-rank = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-rank" }
 sim-lib-discrete-spectral = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-spectral" }
+sim-value = { optional = true, version = "0.1.0" }
 thiserror = "1"
 
 [dev-dependencies]
@@ -29,7 +30,7 @@ sim-test-support = { version = "0.1.0" }
 
 [features]
 algebra = ["dep:sim-lib-discrete-algebra"]
-citizen = ["rank", "dep:sim-citizen", "dep:sim-citizen-derive", "dep:sim-kernel"]
+citizen = ["rank", "dep:sim-citizen", "dep:sim-citizen-derive", "dep:sim-kernel", "dep:sim-value"]
 comb = ["dep:sim-lib-discrete-comb"]
 default = []
 full = ["algebra", "graph", "comb", "spectral"]
