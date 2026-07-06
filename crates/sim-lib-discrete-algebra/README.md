@@ -7,7 +7,7 @@ Discrete algebra spine.
 ## Package Metadata
 
 - Manifest: `crates/sim-lib-discrete-algebra/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation

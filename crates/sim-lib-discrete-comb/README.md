@@ -7,7 +7,7 @@ Discrete combinatorics.
 ## Package Metadata
 
 - Manifest: `crates/sim-lib-discrete-comb/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation

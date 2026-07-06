@@ -1,0 +1,90 @@
+{
+  "generator": "xtask crate-catalog v1",
+  "package_count": 7,
+  "packages": [
+    {
+      "description": "Discrete algebra spine.",
+      "generated_readme": true,
+      "manifest": "crates/sim-lib-discrete-algebra/Cargo.toml",
+      "name": "sim-lib-discrete-algebra",
+      "publish": "true",
+      "readme": "crates/sim-lib-discrete-algebra/README.md",
+      "root": "crates/sim-lib-discrete-algebra",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "Discrete combinatorics.",
+      "generated_readme": true,
+      "manifest": "crates/sim-lib-discrete-comb/Cargo.toml",
+      "name": "sim-lib-discrete-comb",
+      "publish": "true",
+      "readme": "crates/sim-lib-discrete-comb/README.md",
+      "root": "crates/sim-lib-discrete-comb",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "Discrete graph algorithms.",
+      "generated_readme": true,
+      "manifest": "crates/sim-lib-discrete-graph/Cargo.toml",
+      "name": "sim-lib-discrete-graph",
+      "publish": "true",
+      "readme": "crates/sim-lib-discrete-graph/README.md",
+      "root": "crates/sim-lib-discrete-graph",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "Discrete rank adapters.",
+      "generated_readme": true,
+      "manifest": "crates/sim-lib-discrete-rank/Cargo.toml",
+      "name": "sim-lib-discrete-rank",
+      "publish": "true",
+      "readme": "crates/sim-lib-discrete-rank/README.md",
+      "root": "crates/sim-lib-discrete-rank",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "Discrete spectral atlas.",
+      "generated_readme": true,
+      "manifest": "crates/sim-lib-discrete-spectral/Cargo.toml",
+      "name": "sim-lib-discrete-spectral",
+      "publish": "true",
+      "readme": "crates/sim-lib-discrete-spectral/README.md",
+      "root": "crates/sim-lib-discrete-spectral",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "Discrete-math family facade.",
+      "generated_readme": true,
+      "manifest": "crates/sim-lib-discrete/Cargo.toml",
+      "name": "sim-lib-discrete",
+      "publish": "true",
+      "readme": "crates/sim-lib-discrete/README.md",
+      "root": "crates/sim-lib-discrete",
+      "target_kinds": [
+        "lib"
+      ]
+    },
+    {
+      "description": "SIM workspace package for xtask.",
+      "generated_readme": true,
+      "manifest": "xtask/Cargo.toml",
+      "name": "xtask",
+      "publish": "false",
+      "readme": "xtask/README.md",
+      "root": "xtask",
+      "target_kinds": [
+        "bin"
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ Discrete graph algorithms.
 ## Package Metadata
 
 - Manifest: `crates/sim-lib-discrete-graph/Cargo.toml`
-- Publish: `false`
+- Publish: `true`
 - Targets: `lib`
 
 ## Crate Documentation
