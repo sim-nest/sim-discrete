@@ -132,7 +132,9 @@ impl DiscreteOp {
             OpKind::Binomial => {
                 let n = parse_u64(&string_arg(cx, &args[0])?)?;
                 let k = parse_u64(&string_arg(cx, &args[1])?)?;
-                comb::binomial(n, k).to_string()
+                comb::binomial_checked(n, k, comb::MAX_BINOMIAL_INPUT)
+                    .map_err(|e| eval_err(e.to_string()))?
+                    .to_string()
             }
             OpKind::Factorial => {
                 let n = parse_u64(&string_arg(cx, &args[0])?)?;
@@ -371,5 +373,24 @@ mod tests {
         assert!(err.to_string().contains("limit exceeded"), "{err}");
         let err = call(&mut cx, OpKind::PartitionCount, vec!["99999999999"]).unwrap_err();
         assert!(err.to_string().contains("limit exceeded"), "{err}");
+        // A huge symmetric binomial (min(k, n - k) enormous) must be capped too,
+        // not drive a ~5e11-iteration BigUint loop.
+        let err = call(
+            &mut cx,
+            OpKind::Binomial,
+            vec!["1000000000000", "500000000000"],
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("limit exceeded"), "{err}");
+        // The near-`n` edge (k just under n) collapses to a tiny loop and stays cheap.
+        assert_eq!(
+            call(
+                &mut cx,
+                OpKind::Binomial,
+                vec!["1000000000000", "999999999999"]
+            )
+            .unwrap(),
+            "1000000000000"
+        );
     }
 }

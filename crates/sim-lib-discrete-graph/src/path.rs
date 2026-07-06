@@ -68,7 +68,11 @@ pub fn dijkstra<N>(graph: &Graph<N, u64>, source: usize) -> Result<PathResult<u6
             continue;
         }
         for (v, w) in out_arcs(graph, u) {
-            let nd = d + w;
+            // Saturating adversarial weights must not wrap into a spuriously
+            // short distance; an overflowing relaxation is simply no shorter path.
+            let Some(nd) = d.checked_add(w) else {
+                continue;
+            };
             if dist[v].is_none_or(|best| nd < best) {
                 dist[v] = Some(nd);
                 pred[v] = Some(u);
@@ -112,7 +116,11 @@ pub fn bellman_ford<N>(
         let mut changed = false;
         for &(a, b, w) in &arcs {
             if let Some(da) = dist[a] {
-                let nd = da + w;
+                // An overflowing relaxation is treated as no shorter path, never
+                // a wrapped (and falsely shorter) distance.
+                let Some(nd) = da.checked_add(w) else {
+                    continue;
+                };
                 if dist[b].is_none_or(|best| nd < best) {
                     dist[b] = Some(nd);
                     pred[b] = Some(a);
@@ -127,7 +135,8 @@ pub fn bellman_ford<N>(
     let mut negative_cycle = false;
     for &(a, b, w) in &arcs {
         if let Some(da) = dist[a]
-            && dist[b].is_none_or(|best| da + w < best)
+            && let Some(nd) = da.checked_add(w)
+            && dist[b].is_none_or(|best| nd < best)
         {
             negative_cycle = true;
             break;
@@ -224,6 +233,27 @@ mod tests {
         g.add_edge(1, 0, -2).unwrap(); // cycle weight -1
         let (_res, neg) = bellman_ford(&g, 0).unwrap();
         assert!(neg);
+    }
+
+    #[test]
+    fn near_max_weights_do_not_wrap_distance() {
+        // Dijkstra: two near-u64::MAX hops must not wrap to a tiny distance.
+        let mut gu: Graph<u8, u64> = Graph::with_nodes(vec![0, 1, 2], Directedness::Directed);
+        gu.add_edge(0, 1, u64::MAX - 1).unwrap();
+        gu.add_edge(1, 2, u64::MAX - 1).unwrap();
+        let dj = dijkstra(&gu, 0).unwrap();
+        assert_eq!(dj.distances[1], Some(u64::MAX - 1));
+        // 2 is only reachable via an overflowing relaxation, so it stays unreached.
+        assert_eq!(dj.distances[2], None);
+
+        // Bellman-Ford: two near-i64::MAX hops likewise must not wrap.
+        let mut gi: Graph<u8, i64> = Graph::with_nodes(vec![0, 1, 2], Directedness::Directed);
+        gi.add_edge(0, 1, i64::MAX - 1).unwrap();
+        gi.add_edge(1, 2, i64::MAX - 1).unwrap();
+        let (res, neg) = bellman_ford(&gi, 0).unwrap();
+        assert!(!neg);
+        assert_eq!(res.distances[1], Some(i64::MAX - 1));
+        assert_eq!(res.distances[2], None);
     }
 
     #[test]

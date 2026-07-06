@@ -17,6 +17,14 @@ pub const MAX_FACTORIAL_INPUT: u64 = 50_000;
 /// big-integer recurrence, so an uncapped value is an out-of-memory / hang risk.
 pub const MAX_PARTITION_INPUT: u64 = 10_000;
 
+/// Largest effective `k` (`min(k, n - k)`) accepted by [`binomial_checked`]
+/// before [`CombError::LimitExceeded`].
+///
+/// `binomial` folds a `k`-length big-integer product loop; an uncapped `k`
+/// parsed from untrusted text would hang or exhaust memory. Matched to
+/// [`MAX_FACTORIAL_INPUT`], the sibling product-fold ceiling.
+pub const MAX_BINOMIAL_INPUT: u64 = MAX_FACTORIAL_INPUT;
+
 fn big(n: u64) -> BigUint {
     BigUint::from(n)
 }
@@ -75,6 +83,21 @@ pub fn binomial(n: u64, k: u64) -> BigUint {
         result = result * big(n - k + i) / big(i);
     }
     result
+}
+
+/// `n choose k` with an explicit ceiling on the effective loop length
+/// (`min(k, n - k)`).
+///
+/// Returns [`CombError::LimitExceeded`] when `min(k, n - k)` exceeds `max_iter`
+/// instead of folding a `k`-length big-integer product from untrusted input.
+pub fn binomial_checked(n: u64, k: u64, max_iter: u64) -> Result<BigUint, CombError> {
+    let effective = k.min(n.saturating_sub(k));
+    if effective > max_iter {
+        return Err(CombError::LimitExceeded(format!(
+            "binomial k={effective} exceeds maximum {max_iter}"
+        )));
+    }
+    Ok(binomial(n, k))
 }
 
 /// The multinomial coefficient `(sum parts)! / prod(part!)`.
@@ -180,6 +203,9 @@ mod tests {
     fn checked_counts_accept_small_inputs() {
         assert_eq!(factorial_checked(5).unwrap(), b(120));
         assert_eq!(integer_partition_count_checked(5).unwrap(), b(7));
+        assert_eq!(binomial_checked(5, 2, MAX_BINOMIAL_INPUT).unwrap(), b(10));
+        // k > n stays a cheap zero, never rejected on the huge n - k underflow.
+        assert_eq!(binomial_checked(2, 5, MAX_BINOMIAL_INPUT).unwrap(), b(0));
     }
 
     #[test]
@@ -190,6 +216,11 @@ mod tests {
         ));
         assert!(matches!(
             integer_partition_count_checked(u64::MAX),
+            Err(CombError::LimitExceeded(_))
+        ));
+        // min(k, n - k) is the loop length, so a huge symmetric k is rejected.
+        assert!(matches!(
+            binomial_checked(1_000_000_000_000, 500_000_000_000, MAX_BINOMIAL_INPUT),
             Err(CombError::LimitExceeded(_))
         ));
     }
