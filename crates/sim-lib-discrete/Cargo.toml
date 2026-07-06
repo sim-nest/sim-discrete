@@ -24,6 +24,7 @@ thiserror = "1"
 [dev-dependencies]
 sim-codec = { version = "0.1.0" }
 sim-codec-lisp = { version = "0.1.0" }
+sim-kernel = { version = "0.1.0", features = ["test-support"] }
 sim-test-support = { version = "0.1.0" }
 
 [features]
