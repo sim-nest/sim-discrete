@@ -1,5 +1,52 @@
 # sim-discrete
 
+Discrete math you can call from Rust: build and traverse graphs, count and rank
+combinations, run semiring matrix closures, and take Walsh-Hadamard spectra --
+each as a small library crate you add to your own project.
+
+The SIM constellation ships a runtime and a `sim` CLI (`cargo install sim-run`;
+full walkthrough in sim-say), but these crates are usable on their own.
+
+## Examples
+
+Build a directed graph and walk it breadth-first:
+
+```rust
+use sim_lib_discrete_graph::{bfs, Directedness, Graph};
+
+let mut g: Graph<(), ()> = Graph::with_nodes(vec![(), (), ()], Directedness::Directed);
+g.add_edge(0, 1, ()).unwrap();
+g.add_edge(1, 2, ()).unwrap();
+
+let t = bfs(&g, 0).unwrap();
+assert_eq!(t.order, vec![0, 1, 2]);
+assert_eq!(t.predecessor, vec![None, Some(0), Some(1)]);
+```
+
+```bash
+cargo add sim-lib-discrete-graph
+```
+
+Count exactly, over arbitrary-precision integers -- "5 choose 2" is 10:
+
+```rust
+use num_bigint::BigUint;
+use sim_lib_discrete_comb::binomial;
+
+assert_eq!(binomial(5, 2), BigUint::from(10u32));
+assert_eq!(binomial(2, 5), BigUint::from(0u32)); // k > n
+```
+
+```bash
+cargo add sim-lib-discrete-comb num-bigint
+```
+
+Both snippets are the crates' own passing doctests
+(`crates/sim-lib-discrete-graph/src/traversal.rs:35`,
+`crates/sim-lib-discrete-comb/src/count.rs:67`).
+
+## How it works
+
 sim-discrete is the discrete-mathematics family of the SIM constellation. Where
 the kernel supplies the `Value`/`Expr`/`Shape`/codec contracts and sim-numbers
 supplies the number domains, tensors, and linear algebra, this repo supplies the
