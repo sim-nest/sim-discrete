@@ -4,5 +4,5 @@ codec = "lisp"
 setup = "setup.siml"
 purpose = "purpose.md"
 order = 10
-tags = ["discrete", "matrix", "citizen"]
+tags = ["discrete", "matrix", "citizen", "sandbox-descriptor"]
 requires = ["discrete", "codec/lisp"]

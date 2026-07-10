@@ -1,4 +1,6 @@
-# Semiring matrix descriptor
+# Construct a semiring matrix (descriptor)
 
-This recipe uses a tiny identity matrix to anchor algebra examples in a stable
-descriptor form.
+Documents the `#(discrete/...)` reader form that constructs a semiring matrix (numbers over a configurable semiring). The discrete
+domain classes are not among the number/core classes loaded in the cookbook sandbox eval stack,
+so the construction is documented rather than built live. The numbers recipes (complex, rational,
+tensor) show live `#(...)` construction for the domains the sandbox does load.

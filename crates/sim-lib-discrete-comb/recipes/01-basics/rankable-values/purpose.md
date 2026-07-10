@@ -1,4 +1,6 @@
-# Rankable combinatorial values
+# Construct a combination (descriptor)
 
-This recipe places a combination and permutation constructor form side by side
-for rank/unrank examples.
+Documents the `#(discrete/...)` reader form that constructs a combination (rankable combinatorial values). The discrete
+domain classes are not among the number/core classes loaded in the cookbook sandbox eval stack,
+so the construction is documented rather than built live. The numbers recipes (complex, rational,
+tensor) show live `#(...)` construction for the domains the sandbox does load.
