@@ -11,6 +11,7 @@
       "readme": "crates/sim-lib-discrete-algebra/README.md",
       "root": "crates/sim-lib-discrete-algebra",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -23,6 +24,7 @@
       "readme": "crates/sim-lib-discrete-comb/README.md",
       "root": "crates/sim-lib-discrete-comb",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -35,6 +37,7 @@
       "readme": "crates/sim-lib-discrete-graph/README.md",
       "root": "crates/sim-lib-discrete-graph",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -47,6 +50,7 @@
       "readme": "crates/sim-lib-discrete-rank/README.md",
       "root": "crates/sim-lib-discrete-rank",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },
@@ -59,6 +63,7 @@
       "readme": "crates/sim-lib-discrete-spectral/README.md",
       "root": "crates/sim-lib-discrete-spectral",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },

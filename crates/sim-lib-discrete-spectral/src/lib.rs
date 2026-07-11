@@ -28,3 +28,7 @@ pub use transform::{
     fwht_f64, fwht_f64_in_place, fwht_i64, fwht_i64_in_place, ifwht_f64, ifwht_f64_in_place,
     ifwht_i64, ifwht_i64_in_place, is_power_of_two_len, next_power_of_two_len, pad_to_power_of_two,
 };
+
+/// Cookbook recipes for this lib, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

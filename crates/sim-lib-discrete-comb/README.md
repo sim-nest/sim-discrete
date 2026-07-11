@@ -8,7 +8,7 @@ Discrete combinatorics.
 
 - Manifest: `crates/sim-lib-discrete-comb/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 

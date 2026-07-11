@@ -8,7 +8,7 @@ Discrete rank adapters.
 
 - Manifest: `crates/sim-lib-discrete-rank/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 

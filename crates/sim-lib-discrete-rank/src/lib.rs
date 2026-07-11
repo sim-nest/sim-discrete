@@ -33,3 +33,7 @@ pub use graph_space::SimpleGraphSpace;
 pub use lattice::{BitVectorSpace, SubsetSpace};
 pub use signal_space::FwhtSignalSpace;
 pub use tree_metric::spanning_tree_swap_distance;
+
+/// Cookbook recipes for this lib, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

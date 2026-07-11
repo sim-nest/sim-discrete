@@ -8,7 +8,7 @@ Discrete algebra spine.
 
 - Manifest: `crates/sim-lib-discrete-algebra/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 
