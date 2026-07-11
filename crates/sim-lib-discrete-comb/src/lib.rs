@@ -30,3 +30,7 @@ pub use mixed_radix::{mixed_radix_rank, mixed_radix_unrank};
 pub use partition::{IntegerPartitionIter, integer_partitions};
 pub use permutation::{PermutationIter, permutation_rank, permutation_unrank, permutations};
 pub use subset::{SubsetIter, subset_rank, subset_unrank, subsets};
+
+/// Cookbook recipes for this lib, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

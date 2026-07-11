@@ -41,3 +41,7 @@ pub use intring::IntRing;
 pub use mst::{kruskals_mst, prims_mst};
 pub use path::{PathResult, all_pairs_shortest_paths, bellman_ford, dijkstra, reachability};
 pub use traversal::{Traversal, bfs, dfs};
+
+/// Cookbook recipes for this lib, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));

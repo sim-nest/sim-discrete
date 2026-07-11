@@ -8,7 +8,7 @@ Discrete spectral atlas.
 
 - Manifest: `crates/sim-lib-discrete-spectral/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 

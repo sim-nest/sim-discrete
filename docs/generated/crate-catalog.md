@@ -6,10 +6,10 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 
 | Package | Publish | Targets | Description |
 | --- | --- | --- | --- |
-| `sim-lib-discrete-algebra` | `true` | `lib` | Discrete algebra spine. |
-| `sim-lib-discrete-comb` | `true` | `lib` | Discrete combinatorics. |
-| `sim-lib-discrete-graph` | `true` | `lib` | Discrete graph algorithms. |
-| `sim-lib-discrete-rank` | `true` | `lib` | Discrete rank adapters. |
-| `sim-lib-discrete-spectral` | `true` | `lib` | Discrete spectral atlas. |
+| `sim-lib-discrete-algebra` | `true` | `custom-build, lib` | Discrete algebra spine. |
+| `sim-lib-discrete-comb` | `true` | `custom-build, lib` | Discrete combinatorics. |
+| `sim-lib-discrete-graph` | `true` | `custom-build, lib` | Discrete graph algorithms. |
+| `sim-lib-discrete-rank` | `true` | `custom-build, lib` | Discrete rank adapters. |
+| `sim-lib-discrete-spectral` | `true` | `custom-build, lib` | Discrete spectral atlas. |
 | `sim-lib-discrete` | `true` | `custom-build, lib` | Discrete-math family facade. |
 | `xtask` | `false` | `bin` | SIM workspace package for xtask. |

@@ -8,7 +8,7 @@ Discrete graph algorithms.
 
 - Manifest: `crates/sim-lib-discrete-graph/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 

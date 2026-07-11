@@ -36,3 +36,7 @@ pub use sparse::{SparseEntry, SparseMatrix};
 pub use tropical_max::MaxPlus;
 pub use tropical_min::MinPlus;
 pub use views::{DiagonalView, IdentityView, PermutationView};
+
+/// Cookbook recipes for this lib, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));
