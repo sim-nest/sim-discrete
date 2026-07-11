@@ -8,7 +8,7 @@ Discrete-math family facade.
 
 - Manifest: `crates/sim-lib-discrete/Cargo.toml`
 - Publish: `true`
-- Targets: `lib`
+- Targets: `custom-build, lib`
 
 ## Crate Documentation
 

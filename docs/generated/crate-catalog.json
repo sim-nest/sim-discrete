@@ -71,6 +71,7 @@
       "readme": "crates/sim-lib-discrete/README.md",
       "root": "crates/sim-lib-discrete",
       "target_kinds": [
+        "custom-build",
         "lib"
       ]
     },

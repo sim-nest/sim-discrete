@@ -23,6 +23,9 @@
 {"kind":"recipe","path":"crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/setup.siml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-spectral/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete/recipes/01-basics/binomial-count/purpose.md"}
+{"kind":"recipe","path":"crates/sim-lib-discrete/recipes/01-basics/binomial-count/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete/recipes/01-basics/binomial-count/setup.siml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete/recipes/01-basics/matrix-runtime/purpose.md"}
 {"kind":"recipe","path":"crates/sim-lib-discrete/recipes/01-basics/matrix-runtime/recipe.toml"}

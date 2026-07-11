@@ -11,5 +11,5 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | `sim-lib-discrete-graph` | `true` | `lib` | Discrete graph algorithms. |
 | `sim-lib-discrete-rank` | `true` | `lib` | Discrete rank adapters. |
 | `sim-lib-discrete-spectral` | `true` | `lib` | Discrete spectral atlas. |
-| `sim-lib-discrete` | `true` | `lib` | Discrete-math family facade. |
+| `sim-lib-discrete` | `true` | `custom-build, lib` | Discrete-math family facade. |
 | `xtask` | `false` | `bin` | SIM workspace package for xtask. |
