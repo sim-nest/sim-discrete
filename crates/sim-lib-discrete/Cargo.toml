@@ -11,6 +11,7 @@ homepage = "https://github.com/sim-nest/sim-discrete"
 
 [dependencies]
 sim-citizen = { optional = true, version = "0.1.0" }
+sim-cookbook = { version = "0.1.0" }
 sim-citizen-derive = { optional = true, version = "0.1.0" }
 sim-kernel = { optional = true, version = "0.1.0" }
 sim-lib-core = { optional = true, version = "0.1.0" }
@@ -21,6 +22,9 @@ sim-lib-discrete-rank = { version = "0.1.0", optional = true, path = "../sim-lib
 sim-lib-discrete-spectral = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-spectral" }
 sim-value = { optional = true, version = "0.1.0" }
 thiserror = "1"
+
+[build-dependencies]
+sim-cookbook = { version = "0.1.0" }
 
 [dev-dependencies]
 sim-codec = { version = "0.1.0" }

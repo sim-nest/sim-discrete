@@ -21,6 +21,10 @@ pub mod cards;
 mod citizen;
 pub mod forms;
 
+/// Cookbook recipes for the discrete domain, embedded at build time.
+pub static RECIPES: sim_cookbook::EmbeddedDir =
+    include!(concat!(env!("OUT_DIR"), "/cookbook_recipes.rs"));
+
 #[cfg(feature = "runtime")]
 pub mod runtime;
 
