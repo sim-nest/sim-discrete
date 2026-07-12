@@ -8,6 +8,12 @@
 #[path = "forms_extra.rs"]
 mod forms_extra;
 
+use std::sync::Arc;
+
+use sim_citizen::{decode_version, value_from_expr};
+use sim_codec::{DomainFormError, DomainValue, parse_domain_form};
+use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy, Symbol};
+
 pub use forms_extra::*;
 
 /// Errors from parsing a read-construct form.
@@ -34,86 +40,169 @@ pub enum FormError {
 
 /// A parsed token: a bare word, an integer, or a bracketed integer list.
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Token {
+pub(crate) enum Token {
     Word(String),
     Int(i64),
     List(Vec<i64>),
 }
 
-fn tokenize(inner: &str) -> Result<Vec<Token>, FormError> {
-    let chars: Vec<char> = inner.chars().collect();
-    let mut tokens = Vec::new();
-    let mut i = 0;
-    while i < chars.len() {
-        let c = chars[i];
-        if c.is_whitespace() {
-            i += 1;
-            continue;
-        }
-        if c == '[' {
-            let mut j = i + 1;
-            let mut body = String::new();
-            while j < chars.len() && chars[j] != ']' {
-                body.push(chars[j]);
-                j += 1;
-            }
-            if j >= chars.len() {
-                return Err(FormError::BadShape("unterminated list".to_string()));
-            }
-            let mut list = Vec::new();
-            for part in body.split_whitespace() {
-                list.push(
-                    part.parse::<i64>()
-                        .map_err(|_| FormError::BadToken(part.to_string()))?,
-                );
-            }
-            tokens.push(Token::List(list));
-            i = j + 1;
-        } else {
-            let mut word = String::new();
-            while i < chars.len() && !chars[i].is_whitespace() && chars[i] != '[' {
-                word.push(chars[i]);
-                i += 1;
-            }
-            match word.parse::<i64>() {
-                Ok(n) => tokens.push(Token::Int(n)),
-                Err(_) => tokens.push(Token::Word(word)),
-            }
-        }
-    }
-    Ok(tokens)
-}
-
 /// Split a `#(head field...)` form into its head symbol and field tokens.
-fn parse_form(s: &str) -> Result<(String, Vec<Token>), FormError> {
-    let s = s.trim();
-    let inner = s
-        .strip_prefix("#(")
-        .and_then(|r| r.strip_suffix(')'))
-        .ok_or_else(|| FormError::BadShape("expected #( ... )".to_string()))?;
-    let mut tokens = tokenize(inner)?;
-    if tokens.is_empty() {
-        return Err(FormError::BadShape("empty form".to_string()));
+pub(crate) fn parse_form(s: &str) -> Result<(String, Vec<Token>), FormError> {
+    let normalized = normalize_discrete_form(s)?;
+    let form = parse_domain_form(&normalized).map_err(domain_form_error)?;
+    if !form.fields.is_empty() {
+        return Err(FormError::BadArity(
+            "discrete forms use positional fields".to_string(),
+        ));
     }
-    let head = match tokens.remove(0) {
-        Token::Word(w) => w,
-        other => {
-            return Err(FormError::BadShape(format!(
-                "expected head symbol, got {other:?}"
-            )));
-        }
-    };
+    let head = denormalize_discrete_head(form.name);
+    let tokens = form
+        .positional
+        .iter()
+        .map(token_from_domain_value)
+        .collect::<Result<Vec<_>, _>>()?;
     Ok((head, tokens))
 }
 
-fn expect_version(tokens: &[Token]) -> Result<(), FormError> {
+pub(crate) fn expect_version(tokens: &[Token]) -> Result<(), FormError> {
     match tokens.first() {
-        Some(Token::Word(v)) if v == "v1" => Ok(()),
-        Some(Token::Word(v)) => Err(FormError::BadVersion {
-            expected: "v1".to_string(),
-            found: v.clone(),
-        }),
+        Some(Token::Word(v)) => {
+            let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+            let version = value_from_expr(&mut cx, &Expr::Symbol(Symbol::new(v.clone())))
+                .map_err(|err| FormError::BadToken(err.to_string()))?;
+            decode_version(&mut cx, version, 1, Symbol::new("discrete/form")).map_err(|_| {
+                FormError::BadVersion {
+                    expected: "v1".to_string(),
+                    found: v.clone(),
+                }
+            })
+        }
         _ => Err(FormError::BadArity("missing version token".to_string())),
+    }
+}
+
+fn normalize_discrete_form(s: &str) -> Result<String, FormError> {
+    let normalized_head = normalize_discrete_head(s.trim());
+    normalize_discrete_int_lists(&normalized_head)
+}
+
+fn normalize_discrete_head(s: &str) -> String {
+    let Some(rest) = s.strip_prefix("#(discrete/") else {
+        return s.to_string();
+    };
+    // DomainForm names are identifiers, while these shipped read-construct
+    // heads are namespaced symbols. Translate only the discrete head before
+    // parsing, then restore the public name after parsing.
+    let split = rest
+        .find(|ch: char| ch.is_whitespace() || ch == ')')
+        .unwrap_or(rest.len());
+    format!("#(discrete-{}{}", &rest[..split], &rest[split..])
+}
+
+fn denormalize_discrete_head(name: String) -> String {
+    name.strip_prefix("discrete-")
+        .map(|kind| format!("discrete/{kind}"))
+        .unwrap_or(name)
+}
+
+fn normalize_discrete_int_lists(s: &str) -> Result<String, FormError> {
+    let chars = s.chars().collect::<Vec<_>>();
+    let mut out = String::with_capacity(s.len());
+    let mut i = 0;
+    while i < chars.len() {
+        if chars[i] != '[' {
+            out.push(chars[i]);
+            i += 1;
+            continue;
+        }
+
+        // DomainForm uses comma-separated lists. Discrete's public forms
+        // already use whitespace-separated integer vectors, so this is the
+        // only domain-specific syntax bridge kept in this module.
+        out.push('[');
+        i += 1;
+        let mut first = true;
+        loop {
+            while i < chars.len() && chars[i].is_whitespace() {
+                i += 1;
+            }
+            if i >= chars.len() {
+                return Err(FormError::BadShape("unterminated list".to_string()));
+            }
+            if chars[i] == ']' {
+                out.push(']');
+                i += 1;
+                break;
+            }
+            if chars[i] == ',' {
+                return Err(FormError::BadToken(",".to_string()));
+            }
+            if !first {
+                out.push(',');
+            }
+            first = false;
+
+            let start = i;
+            while i < chars.len() && !chars[i].is_whitespace() && chars[i] != ',' && chars[i] != ']'
+            {
+                i += 1;
+            }
+            if start == i {
+                return Err(FormError::BadToken(chars[i].to_string()));
+            }
+            out.extend(chars[start..i].iter());
+
+            while i < chars.len() && chars[i].is_whitespace() {
+                i += 1;
+            }
+            if i < chars.len() && chars[i] == ',' {
+                i += 1;
+            }
+        }
+    }
+    Ok(out)
+}
+
+fn domain_form_error(error: DomainFormError) -> FormError {
+    match error {
+        DomainFormError::ExpectedForm => FormError::BadShape("expected #( ... )".to_string()),
+        DomainFormError::UnexpectedEof => FormError::BadShape("unexpected end of form".to_string()),
+        DomainFormError::InvalidToken => {
+            FormError::BadShape("invalid domain form token".to_string())
+        }
+        DomainFormError::DuplicateField(field) => {
+            FormError::BadArity(format!("duplicate field {field}"))
+        }
+        DomainFormError::TrailingInput => FormError::BadShape("trailing input".to_string()),
+        DomainFormError::MissingField(field) => FormError::BadToken(format!("missing {field}")),
+        DomainFormError::WrongFieldKind(field) => FormError::BadToken(format!("bad {field}")),
+        DomainFormError::WrongValueKind => FormError::BadToken("bad value kind".to_string()),
+    }
+}
+
+fn token_from_domain_value(value: &DomainValue) -> Result<Token, FormError> {
+    match value {
+        DomainValue::Atom(text) => match text.parse::<i64>() {
+            Ok(n) => Ok(Token::Int(n)),
+            Err(_) => Ok(Token::Word(text.clone())),
+        },
+        DomainValue::List(items) => items
+            .iter()
+            .map(int_from_domain_value)
+            .collect::<Result<Vec<_>, _>>()
+            .map(Token::List),
+        DomainValue::String(_) | DomainValue::Form(_) => {
+            Err(FormError::BadToken(value.render_text()))
+        }
+    }
+}
+
+fn int_from_domain_value(value: &DomainValue) -> Result<i64, FormError> {
+    match value {
+        DomainValue::Atom(text) => text
+            .parse::<i64>()
+            .map_err(|_| FormError::BadToken(text.clone())),
+        _ => Err(FormError::BadToken(value.render_text())),
     }
 }
 
@@ -258,6 +347,14 @@ mod tests {
     fn permutation_round_trips() {
         let s = encode_permutation(&[2, 0, 1]);
         assert_eq!(decode_permutation(&s).unwrap(), vec![2, 0, 1]);
+    }
+
+    #[test]
+    fn domain_form_comma_lists_decode() {
+        assert_eq!(
+            decode_permutation("#(discrete/permutation v1 [2,0,1])").unwrap(),
+            vec![2, 0, 1]
+        );
     }
 
     #[test]
