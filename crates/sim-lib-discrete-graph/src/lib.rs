@@ -13,6 +13,7 @@ pub mod bridge;
 pub mod cards;
 pub mod certificate;
 pub mod connectivity;
+pub mod cookbook;
 pub mod edge;
 pub mod error;
 pub mod graph;
@@ -34,6 +35,7 @@ pub use certificate::{
 pub use connectivity::{
     connected_components, strongly_connected_components, weakly_connected_components,
 };
+pub use cookbook::{TinyGraphDemo, tiny_graph_demo};
 pub use edge::{Directedness, Edge};
 pub use error::GraphError;
 pub use graph::{Graph, Neighbor};

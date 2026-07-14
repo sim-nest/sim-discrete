@@ -13,6 +13,7 @@
 
 pub mod boolean;
 pub mod closure;
+pub mod cookbook;
 pub mod counting;
 pub mod error;
 pub mod gf2;
@@ -26,6 +27,7 @@ pub mod tropical_min;
 pub mod views;
 
 pub use boolean::BoolRing;
+pub use cookbook::{SemiringMatrixDemo, semiring_matrix_demo};
 pub use counting::Counting;
 pub use error::AlgebraError;
 pub use gf2::Gf2;

@@ -10,6 +10,7 @@
 pub mod bit_vector;
 pub mod cards;
 pub mod combination;
+pub mod cookbook;
 pub mod count;
 pub mod error;
 pub mod mixed_radix;
@@ -20,6 +21,7 @@ pub mod subset;
 pub use bit_vector::{BitVectorIter, bit_vector_rank, bit_vector_unrank, bit_vectors};
 pub use cards::{CardSpec, combinatorics_cards};
 pub use combination::{CombinationIter, combination_rank, combination_unrank, combinations};
+pub use cookbook::{RankableValuesDemo, rankable_values_demo};
 pub use count::{
     MAX_BINOMIAL_INPUT, MAX_FACTORIAL_INPUT, MAX_PARTITION_INPUT, bell_number, binomial,
     binomial_checked, factorial, factorial_checked, falling_factorial, integer_partition_count,

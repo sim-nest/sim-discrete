@@ -19,6 +19,7 @@
 pub mod cards;
 #[cfg(feature = "citizen")]
 mod citizen;
+pub mod cookbook;
 pub mod forms;
 
 /// Cookbook recipes for the discrete domain, embedded at build time.
@@ -31,6 +32,7 @@ pub mod runtime;
 pub use cards::{DiscreteCard, discrete_cards};
 #[cfg(feature = "citizen")]
 pub use citizen::*;
+pub use cookbook::matrix_runtime_demo;
 
 #[cfg(feature = "runtime")]
 pub use runtime::{DiscreteLib, DiscreteOp, OpKind, install_discrete_lib};

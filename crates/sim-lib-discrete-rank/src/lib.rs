@@ -13,6 +13,7 @@
 
 pub mod cards;
 pub mod combinatorial;
+pub mod cookbook;
 pub mod descriptor;
 pub mod error;
 pub mod grade;
@@ -24,6 +25,7 @@ pub mod tree_metric;
 
 pub use cards::discrete_rank_cards;
 pub use combinatorial::{BoundedIntVectorSpace, CombinationSpace, PermutationSpace};
+pub use cookbook::{CombinationSpaceDemo, combination_space_demo};
 pub use descriptor::{CardSpec, SpaceDescriptor};
 pub use error::RankAdapterError;
 pub use grade::{
