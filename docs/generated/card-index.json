@@ -1,38 +1,132 @@
 {
-  "schema": "sim.card-index.v1",
+  "card_count": 21,
   "cards": [
-    "crates/sim-lib-discrete-algebra/recipes/01-basics/chapter.toml",
-    "crates/sim-lib-discrete-algebra/recipes/01-basics/semiring-matrix/purpose.md",
-    "crates/sim-lib-discrete-algebra/recipes/01-basics/semiring-matrix/recipe.toml",
-    "crates/sim-lib-discrete-algebra/recipes/01-basics/semiring-matrix/setup.siml",
-    "crates/sim-lib-discrete-algebra/recipes/book.toml",
-    "crates/sim-lib-discrete-comb/recipes/01-basics/chapter.toml",
-    "crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/purpose.md",
-    "crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/recipe.toml",
-    "crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/setup.siml",
-    "crates/sim-lib-discrete-comb/recipes/book.toml",
-    "crates/sim-lib-discrete-graph/recipes/01-basics/chapter.toml",
-    "crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/purpose.md",
-    "crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/recipe.toml",
-    "crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/setup.siml",
-    "crates/sim-lib-discrete-graph/recipes/book.toml",
-    "crates/sim-lib-discrete-rank/recipes/01-basics/chapter.toml",
-    "crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/purpose.md",
-    "crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/recipe.toml",
-    "crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/setup.siml",
-    "crates/sim-lib-discrete-rank/recipes/book.toml",
-    "crates/sim-lib-discrete-spectral/recipes/01-basics/chapter.toml",
-    "crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/purpose.md",
-    "crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/recipe.toml",
-    "crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/setup.siml",
-    "crates/sim-lib-discrete-spectral/recipes/book.toml",
-    "crates/sim-lib-discrete/recipes/01-basics/binomial-count/purpose.md",
-    "crates/sim-lib-discrete/recipes/01-basics/binomial-count/recipe.toml",
-    "crates/sim-lib-discrete/recipes/01-basics/binomial-count/setup.siml",
-    "crates/sim-lib-discrete/recipes/01-basics/chapter.toml",
-    "crates/sim-lib-discrete/recipes/01-basics/matrix-runtime/purpose.md",
-    "crates/sim-lib-discrete/recipes/01-basics/matrix-runtime/recipe.toml",
-    "crates/sim-lib-discrete/recipes/01-basics/matrix-runtime/setup.siml",
-    "crates/sim-lib-discrete/recipes/book.toml"
-  ]
+    {
+      "id": "browse/catalog",
+      "kind": "browse-root",
+      "owner": "workspace",
+      "summary": "root browse catalog"
+    },
+    {
+      "id": "cookbook/discrete",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete",
+      "summary": "Runtime-facing discrete matrix, graph, and transform descriptors."
+    },
+    {
+      "id": "cookbook/discrete-algebra",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-algebra",
+      "summary": "Small semiring and matrix-view descriptors."
+    },
+    {
+      "id": "cookbook/discrete-comb",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-comb",
+      "summary": "Combination and permutation descriptors."
+    },
+    {
+      "id": "cookbook/discrete-graph",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-graph",
+      "summary": "Graph, edge, traversal, and certificate descriptors."
+    },
+    {
+      "id": "cookbook/discrete-rank",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-rank",
+      "summary": "Rank-space descriptors for discrete objects."
+    },
+    {
+      "id": "cookbook/discrete-spectral",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-spectral",
+      "summary": "FWHT, Walsh signature, and spectral descriptor examples."
+    },
+    {
+      "id": "discrete/algebra",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Semiring matrices, powers, and Kleene closure (the spine)."
+    },
+    {
+      "id": "discrete/combinatorics",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Exact counts, lazy enumerators, and canonical ordinals."
+    },
+    {
+      "id": "discrete/graph",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Graphs, MST, shortest paths, and certificates."
+    },
+    {
+      "id": "discrete/music-adapter",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "FWHT-based melody analysis (consumes the spectral atlas)."
+    },
+    {
+      "id": "discrete/rank",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Finite rank spaces, metrics, and invariant grade compilers."
+    },
+    {
+      "id": "discrete/spectral",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "FWHT, XOR/subset convolution, and Walsh signatures."
+    },
+    {
+      "id": "rank/discrete/bit-vector",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Fixed-width bit vectors."
+    },
+    {
+      "id": "rank/discrete/bounded-int-vector",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Mixed-radix integer vectors."
+    },
+    {
+      "id": "rank/discrete/combination",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "k-subsets of n."
+    },
+    {
+      "id": "rank/discrete/fwht-signal",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Finite-alphabet integer signals."
+    },
+    {
+      "id": "rank/discrete/permutation",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Permutations of n elements."
+    },
+    {
+      "id": "rank/discrete/simple-graph",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Labeled simple undirected graphs on n nodes."
+    },
+    {
+      "id": "rank/discrete/subset",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Subsets of a finite ground set."
+    },
+    {
+      "id": "registry/catalog",
+      "kind": "browse-registry",
+      "owner": "workspace",
+      "summary": "registry catalog browse card"
+    }
+  ],
+  "generator": "xtask repo-contract v1"
 }

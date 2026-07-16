@@ -1,5 +1,54 @@
 {
-  "schema": "sim.rustdoc-index.v1",
-  "repo": "sim-discrete",
-  "target_doc": "target/doc/"
+  "generator": "xtask repo-contract v1",
+  "packages": [
+    {
+      "crate_name": "sim_lib_discrete",
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete/Cargo.toml",
+      "package": "sim-lib-discrete",
+      "summary": "Discrete-math family facade."
+    },
+    {
+      "crate_name": "sim_lib_discrete_algebra",
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-algebra/Cargo.toml",
+      "package": "sim-lib-discrete-algebra",
+      "summary": "Discrete algebra spine."
+    },
+    {
+      "crate_name": "sim_lib_discrete_comb",
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-comb/Cargo.toml",
+      "package": "sim-lib-discrete-comb",
+      "summary": "Discrete combinatorics."
+    },
+    {
+      "crate_name": "sim_lib_discrete_graph",
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-graph/Cargo.toml",
+      "package": "sim-lib-discrete-graph",
+      "summary": "Discrete graph algorithms."
+    },
+    {
+      "crate_name": "sim_lib_discrete_rank",
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-rank/Cargo.toml",
+      "package": "sim-lib-discrete-rank",
+      "summary": "Discrete rank adapters."
+    },
+    {
+      "crate_name": "sim_lib_discrete_spectral",
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-spectral/Cargo.toml",
+      "package": "sim-lib-discrete-spectral",
+      "summary": "Discrete spectral atlas."
+    },
+    {
+      "crate_name": "xtask",
+      "group": "workspace",
+      "manifest": "xtask/Cargo.toml",
+      "package": "xtask",
+      "summary": "SIM workspace package for xtask."
+    }
+  ]
 }
