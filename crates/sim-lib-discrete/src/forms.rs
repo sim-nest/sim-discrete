@@ -8,11 +8,7 @@
 #[path = "forms_extra.rs"]
 mod forms_extra;
 
-use std::sync::Arc;
-
-use sim_citizen::{decode_version, value_from_expr};
 use sim_codec::{DomainFormError, DomainValue, parse_domain_form};
-use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy, Symbol};
 
 pub use forms_extra::*;
 
@@ -66,17 +62,11 @@ pub(crate) fn parse_form(s: &str) -> Result<(String, Vec<Token>), FormError> {
 
 pub(crate) fn expect_version(tokens: &[Token]) -> Result<(), FormError> {
     match tokens.first() {
-        Some(Token::Word(v)) => {
-            let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
-            let version = value_from_expr(&mut cx, &Expr::Symbol(Symbol::new(v.clone())))
-                .map_err(|err| FormError::BadToken(err.to_string()))?;
-            decode_version(&mut cx, version, 1, Symbol::new("discrete/form")).map_err(|_| {
-                FormError::BadVersion {
-                    expected: "v1".to_string(),
-                    found: v.clone(),
-                }
-            })
-        }
+        Some(Token::Word(v)) if v == "v1" => Ok(()),
+        Some(Token::Word(v)) => Err(FormError::BadVersion {
+            expected: "v1".to_string(),
+            found: v.clone(),
+        }),
         _ => Err(FormError::BadArity("missing version token".to_string())),
     }
 }
@@ -422,6 +412,10 @@ mod tests {
         assert!(matches!(
             decode_permutation("#(discrete/permutation v2 [0 1])"),
             Err(FormError::BadVersion { .. })
+        ));
+        assert!(matches!(
+            decode_permutation("#(discrete/permutation 1 [0 1])"),
+            Err(FormError::BadArity(_))
         ));
     }
 

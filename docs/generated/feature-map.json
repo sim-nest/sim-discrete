@@ -18,6 +18,7 @@
         {
           "edges": [
             "rank",
+            "dep:sim-citizen",
             "dep:sim-citizen-derive",
             "dep:sim-value"
           ],

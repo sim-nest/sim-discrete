@@ -10,7 +10,9 @@ use crate::edge::Directedness;
 use crate::error::GraphError;
 use crate::graph::Graph;
 use crate::intring::IntRing;
-use sim_lib_discrete_algebra::{BoolRing, Matrix, MinPlus, SparseEntry, SparseMatrix};
+use sim_lib_discrete_algebra::{
+    AlgebraLimits, BoolRing, Matrix, MinPlus, SparseEntry, SparseMatrix,
+};
 use std::collections::HashMap;
 
 /// Resolved canonical-pair values plus the per-edge `(row, col)` mapping.
@@ -143,7 +145,7 @@ pub fn graph_to_bool_adjacency<N, W>(
 ) -> Result<(Matrix<BoolRing>, GraphMatrixMap), GraphError> {
     graph.validate()?;
     let n = graph.node_count();
-    let mut m = Matrix::filled(n, n, BoolRing(false));
+    let mut m = Matrix::try_filled_with_limits(n, n, BoolRing(false), AlgebraLimits::default())?;
     let undirected = !graph.is_directed();
     let mut map = identity_map(n, graph.edge_count(), "boolean");
     for e in &graph.edges {
@@ -168,7 +170,7 @@ pub fn graph_to_minplus_adjacency<N>(
     graph.validate()?;
     let n = graph.node_count();
     let (resolved, edge_to_entry) = resolve(graph, policy)?;
-    let mut m = Matrix::filled(n, n, MinPlus::Inf);
+    let mut m = Matrix::try_filled_with_limits(n, n, MinPlus::Inf, AlgebraLimits::default())?;
     for ((r, c), v) in directed_cells(graph, &resolved) {
         m.data[r * n + c] = MinPlus::Fin(v);
     }
@@ -247,7 +249,7 @@ pub fn graph_to_incidence<N, W>(graph: &Graph<N, W>) -> Result<SparseMatrix<IntR
 pub fn graph_to_laplacian<N, W>(graph: &Graph<N, W>) -> Result<Matrix<IntRing>, GraphError> {
     graph.validate()?;
     let n = graph.node_count();
-    let mut m = Matrix::filled(n, n, IntRing(0));
+    let mut m = Matrix::try_filled_with_limits(n, n, IntRing(0), AlgebraLimits::default())?;
     let undirected = !graph.is_directed();
     for e in &graph.edges {
         if e.is_self_loop() {
@@ -269,6 +271,7 @@ pub fn minplus_adjacency_to_graph(
     matrix: &Matrix<MinPlus>,
     directedness: Directedness,
 ) -> Result<Graph<usize, i64>, GraphError> {
+    matrix.validate()?;
     if !matrix.is_square() {
         return Err(GraphError::Unsupported(
             "adjacency must be square".to_string(),

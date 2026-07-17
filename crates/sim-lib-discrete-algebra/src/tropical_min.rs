@@ -1,8 +1,12 @@
-//! The min-plus (tropical) semiring. Closure gives all-pairs shortest paths.
+//! The bounded min-plus (tropical) semiring.
+//!
+//! Finite multiplication uses `i64::saturating_add`, so this is a bounded
+//! tropical algebra for closure and matrix work. Checked integer shortest-path
+//! APIs in `sim-lib-discrete-graph` report overflow instead of saturating.
 
 use crate::semiring::Semiring;
 
-/// Min-plus tropical semiring: `add` is `min`, `mul` is saturating `+`.
+/// Bounded min-plus tropical semiring: `add` is `min`, `mul` is saturating `+`.
 ///
 /// `zero` is `Inf` (no path); `one` is `Fin(0)` (the empty path).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

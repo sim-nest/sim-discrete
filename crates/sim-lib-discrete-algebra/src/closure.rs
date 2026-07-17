@@ -39,6 +39,7 @@ impl<S: Semiring> Matrix<S> {
     /// assert_eq!(reach.get(2, 0).unwrap(), &BoolRing(false)); // 2 cannot reach 0
     /// ```
     pub fn closure(&self, limits: AlgebraLimits) -> Result<Self, AlgebraError> {
+        self.validate()?;
         if !self.is_square() {
             return Err(AlgebraError::ShapeMismatch(format!(
                 "closure requires a square matrix, got {}x{}",

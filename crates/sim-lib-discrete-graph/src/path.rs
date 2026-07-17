@@ -1,5 +1,5 @@
-//! Shortest paths: single-source Dijkstra and Bellman-Ford, plus all-pairs and
-//! reachability as thin wrappers over the algebra spine's semiring closure.
+//! Shortest paths: single-source Dijkstra and Bellman-Ford, checked all-pairs
+//! shortest paths, and reachability over the algebra spine's semiring closure.
 
 use crate::error::GraphError;
 use crate::graph::Graph;
@@ -151,27 +151,28 @@ pub fn bellman_ford<N>(
     ))
 }
 
-/// All-pairs shortest paths as the min-plus closure of the adjacency matrix.
-/// This is a thin wrapper over the spine; it does not re-implement Floyd-Warshall.
+/// Checked all-pairs shortest paths.
+///
+/// The algebra crate's tropical semiring is a bounded saturating model. This
+/// graph-facing API instead shares Bellman-Ford's fail-closed `i64` overflow
+/// policy so single-source and all-pairs shortest paths agree at numeric
+/// extremes.
 pub fn all_pairs_shortest_paths<N>(graph: &Graph<N, i64>) -> Result<Matrix<MinPlus>, GraphError> {
     graph.validate()?;
     let n = graph.node_count();
-    let undirected = !graph.is_directed();
-    let mut m = Matrix::filled(n, n, MinPlus::Inf);
-    for e in &graph.edges {
-        // Accumulate by semiring add (min) so parallel edges keep the cheapest.
-        m.data[e.source * n + e.target] = min_plus_add(m.data[e.source * n + e.target], e.weight);
-        if undirected {
-            m.data[e.target * n + e.source] =
-                min_plus_add(m.data[e.target * n + e.source], e.weight);
+    let mut m = Matrix::try_filled_with_limits(n, n, MinPlus::Inf, AlgebraLimits::default())?;
+    for source in 0..n {
+        let (paths, negative_cycle) = bellman_ford(graph, source)?;
+        if negative_cycle {
+            return Err(GraphError::NegativeCycle);
+        }
+        for (target, distance) in paths.distances.into_iter().enumerate() {
+            if let Some(distance) = distance {
+                m.set(source, target, MinPlus::Fin(distance))?;
+            }
         }
     }
-    Ok(m.closure(AlgebraLimits::default())?)
-}
-
-fn min_plus_add(cur: MinPlus, w: i64) -> MinPlus {
-    use sim_lib_discrete_algebra::Semiring;
-    cur.add(&MinPlus::Fin(w))
+    Ok(m)
 }
 
 /// Reachability as the boolean closure of the adjacency matrix. Thin wrapper.
@@ -179,7 +180,7 @@ pub fn reachability<N, W>(graph: &Graph<N, W>) -> Result<Matrix<BoolRing>, Graph
     graph.validate()?;
     let n = graph.node_count();
     let undirected = !graph.is_directed();
-    let mut m = Matrix::filled(n, n, BoolRing(false));
+    let mut m = Matrix::try_filled_with_limits(n, n, BoolRing(false), AlgebraLimits::default())?;
     for e in &graph.edges {
         m.data[e.source * n + e.target] = BoolRing(true);
         if undirected {
@@ -255,6 +256,27 @@ mod tests {
             bellman_ford(&gi, 0),
             Err(GraphError::WeightOverflow(_))
         ));
+    }
+
+    #[test]
+    fn all_pairs_shortest_paths_rejects_overflow() {
+        let mut g: Graph<u8, i64> = Graph::with_nodes(vec![0, 1, 2], Directedness::Directed);
+        g.add_edge(0, 1, i64::MAX - 1).unwrap();
+        g.add_edge(1, 2, i64::MAX - 1).unwrap();
+
+        assert!(matches!(
+            all_pairs_shortest_paths(&g),
+            Err(GraphError::WeightOverflow(_))
+        ));
+    }
+
+    #[test]
+    fn all_pairs_shortest_paths_rejects_negative_cycle() {
+        let mut g: Graph<u8, i64> = Graph::with_nodes(vec![0, 1], Directedness::Directed);
+        g.add_edge(0, 1, 1).unwrap();
+        g.add_edge(1, 0, -2).unwrap();
+
+        assert_eq!(all_pairs_shortest_paths(&g), Err(GraphError::NegativeCycle));
     }
 
     #[test]
