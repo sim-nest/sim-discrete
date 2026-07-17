@@ -2,6 +2,7 @@
 
 use crate::descriptor::{SpaceDescriptor, from_nat, to_nat};
 use crate::error::RankAdapterError;
+use crate::limits::DiscreteRankLimits;
 use crate::metric;
 use num_bigint::BigUint;
 use sim_lib_discrete_comb::{bit_vector_rank, bit_vector_unrank, subset_rank, subset_unrank};
@@ -28,6 +29,16 @@ pub struct BitVectorSpace {
 }
 
 impl BitVectorSpace {
+    /// Build a bit-vector space after applying the default descriptor limits.
+    pub fn try_new(width: usize) -> Result<Self, RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_bit_vector_width(width)?;
+        Ok(Self { width })
+    }
+
+    fn validate(&self) -> Result<(), RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_bit_vector_width(self.width)
+    }
+
     /// The space descriptor.
     pub fn descriptor(&self) -> SpaceDescriptor {
         SpaceDescriptor {
@@ -46,6 +57,7 @@ impl BitVectorSpace {
 
     /// Rank a bit vector of length `width`.
     pub fn rank(&self, bits: &[bool]) -> Result<Nat, RankAdapterError> {
+        self.validate()?;
         if bits.len() != self.width {
             return Err(RankAdapterError::Invalid(format!(
                 "bit vector length {} != width {}",
@@ -58,6 +70,7 @@ impl BitVectorSpace {
 
     /// Unrank an ordinal into a bit vector of length `width`.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<bool>, RankAdapterError> {
+        self.validate()?;
         Ok(bit_vector_unrank(&from_nat(ordinal), self.width)?)
     }
 
@@ -90,6 +103,16 @@ pub struct SubsetSpace {
 }
 
 impl SubsetSpace {
+    /// Build a subset space after applying the default descriptor limits.
+    pub fn try_new(n: usize) -> Result<Self, RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_subset_size(n)?;
+        Ok(Self { n })
+    }
+
+    fn validate(&self) -> Result<(), RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_subset_size(self.n)
+    }
+
     /// The space descriptor.
     pub fn descriptor(&self) -> SpaceDescriptor {
         SpaceDescriptor {
@@ -108,11 +131,13 @@ impl SubsetSpace {
 
     /// Rank a subset (sorted distinct member indices).
     pub fn rank(&self, members: &[usize]) -> Result<Nat, RankAdapterError> {
+        self.validate()?;
         Ok(to_nat(subset_rank(members, self.n)?))
     }
 
     /// Unrank an ordinal into the subset member list.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<usize>, RankAdapterError> {
+        self.validate()?;
         Ok(subset_unrank(&from_nat(ordinal), self.n)?)
     }
 
@@ -187,6 +212,20 @@ mod tests {
         assert!(matches!(
             space.unrank(&space.cardinality()),
             Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn checked_constructors_reject_first_out_of_range_dimensions() {
+        assert!(BitVectorSpace::try_new(127).is_ok());
+        assert!(matches!(
+            BitVectorSpace::try_new(128),
+            Err(RankAdapterError::LimitExceeded(_))
+        ));
+        assert!(SubsetSpace::try_new(127).is_ok());
+        assert!(matches!(
+            SubsetSpace::try_new(128),
+            Err(RankAdapterError::LimitExceeded(_))
         ));
     }
 }

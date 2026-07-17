@@ -2,6 +2,7 @@
 
 use crate::descriptor::{SpaceDescriptor, from_nat, to_nat};
 use crate::error::RankAdapterError;
+use crate::limits::DiscreteRankLimits;
 use crate::metric;
 use sim_lib_discrete_comb::{
     combination_rank, combination_unrank, mixed_radix_rank, mixed_radix_unrank, permutation_rank,
@@ -31,6 +32,16 @@ pub struct CombinationSpace {
 }
 
 impl CombinationSpace {
+    /// Build a combination space after applying the default descriptor limits.
+    pub fn try_new(n: usize, k: usize) -> Result<Self, RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_combination(n, k)?;
+        Ok(Self { n, k })
+    }
+
+    fn validate(&self) -> Result<(), RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_combination(self.n, self.k)
+    }
+
     /// The space descriptor.
     pub fn descriptor(&self) -> SpaceDescriptor {
         SpaceDescriptor {
@@ -44,6 +55,7 @@ impl CombinationSpace {
 
     /// Rank an ascending combination.
     pub fn rank(&self, combo: &[usize]) -> Result<Nat, RankAdapterError> {
+        self.validate()?;
         if combo.len() != self.k {
             return Err(RankAdapterError::Invalid(format!(
                 "combination length {} != k {}",
@@ -56,6 +68,7 @@ impl CombinationSpace {
 
     /// Unrank an ordinal into a combination.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<usize>, RankAdapterError> {
+        self.validate()?;
         Ok(combination_unrank(&from_nat(ordinal), self.n, self.k)?)
     }
 
@@ -76,6 +89,16 @@ pub struct PermutationSpace {
 }
 
 impl PermutationSpace {
+    /// Build a permutation space after applying the default descriptor limits.
+    pub fn try_new(n: usize) -> Result<Self, RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_permutation_size(n)?;
+        Ok(Self { n })
+    }
+
+    fn validate(&self) -> Result<(), RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_permutation_size(self.n)
+    }
+
     /// The space descriptor.
     pub fn descriptor(&self) -> SpaceDescriptor {
         SpaceDescriptor {
@@ -89,6 +112,7 @@ impl PermutationSpace {
 
     /// Rank a permutation.
     pub fn rank(&self, perm: &[usize]) -> Result<Nat, RankAdapterError> {
+        self.validate()?;
         if perm.len() != self.n {
             return Err(RankAdapterError::Invalid(format!(
                 "permutation length {} != n {}",
@@ -101,6 +125,7 @@ impl PermutationSpace {
 
     /// Unrank an ordinal into a permutation.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<usize>, RankAdapterError> {
+        self.validate()?;
         Ok(permutation_unrank(&from_nat(ordinal), self.n)?)
     }
 
@@ -121,6 +146,16 @@ pub struct BoundedIntVectorSpace {
 }
 
 impl BoundedIntVectorSpace {
+    /// Build a bounded integer vector space after applying default limits.
+    pub fn try_new(radices: Vec<u64>) -> Result<Self, RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_radices(&radices)?;
+        Ok(Self { radices })
+    }
+
+    fn validate(&self) -> Result<(), RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_radices(&self.radices)
+    }
+
     /// The space descriptor.
     pub fn descriptor(&self) -> SpaceDescriptor {
         SpaceDescriptor {
@@ -134,11 +169,13 @@ impl BoundedIntVectorSpace {
 
     /// Rank a digit vector.
     pub fn rank(&self, digits: &[u64]) -> Result<Nat, RankAdapterError> {
+        self.validate()?;
         Ok(to_nat(mixed_radix_rank(digits, &self.radices)?))
     }
 
     /// Unrank an ordinal into a digit vector.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<u64>, RankAdapterError> {
+        self.validate()?;
         Ok(mixed_radix_unrank(&from_nat(ordinal), &self.radices)?)
     }
 
@@ -217,5 +254,36 @@ mod tests {
         let a = space.rank(&[2, 0, 3]).unwrap();
         let b = space.rank(&[0, 1, 1]).unwrap();
         assert_eq!(space.distance(&a, &b).unwrap(), nat(2 + 1 + 2));
+    }
+
+    #[test]
+    fn checked_constructors_reject_first_out_of_range_dimensions() {
+        assert!(CombinationSpace::try_new(127, 127).is_ok());
+        assert!(matches!(
+            CombinationSpace::try_new(128, 1),
+            Err(RankAdapterError::LimitExceeded(_))
+        ));
+        assert!(matches!(
+            CombinationSpace::try_new(5, 6),
+            Err(RankAdapterError::Invalid(_))
+        ));
+        assert!(PermutationSpace::try_new(127).is_ok());
+        assert!(matches!(
+            PermutationSpace::try_new(128),
+            Err(RankAdapterError::LimitExceeded(_))
+        ));
+        assert!(BoundedIntVectorSpace::try_new(vec![1_000_000; 127]).is_ok());
+        assert!(matches!(
+            BoundedIntVectorSpace::try_new(vec![2; 128]),
+            Err(RankAdapterError::LimitExceeded(_))
+        ));
+        assert!(matches!(
+            BoundedIntVectorSpace::try_new(vec![0]),
+            Err(RankAdapterError::Invalid(_))
+        ));
+        assert!(matches!(
+            BoundedIntVectorSpace::try_new(vec![1_000_001]),
+            Err(RankAdapterError::LimitExceeded(_))
+        ));
     }
 }

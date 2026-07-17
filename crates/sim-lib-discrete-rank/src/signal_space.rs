@@ -2,6 +2,7 @@
 
 use crate::descriptor::{SpaceDescriptor, from_nat, to_nat};
 use crate::error::RankAdapterError;
+use crate::limits::DiscreteRankLimits;
 use crate::metric;
 use num_bigint::BigUint;
 use sim_lib_discrete_comb::{mixed_radix_rank, mixed_radix_unrank};
@@ -21,6 +22,16 @@ pub struct FwhtSignalSpace {
 }
 
 impl FwhtSignalSpace {
+    /// Build an FWHT-signal space after applying the default descriptor limits.
+    pub fn try_new(len: usize, alphabet: u64) -> Result<Self, RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_fwht_signal(len, alphabet)?;
+        Ok(Self { len, alphabet })
+    }
+
+    fn validate(&self) -> Result<(), RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_fwht_signal(self.len, self.alphabet)
+    }
+
     fn radices(&self) -> Vec<u64> {
         vec![self.alphabet; self.len]
     }
@@ -46,6 +57,7 @@ impl FwhtSignalSpace {
 
     /// Rank a coefficient vector (each value in `0..alphabet`).
     pub fn rank(&self, coeffs: &[i64]) -> Result<Nat, RankAdapterError> {
+        self.validate()?;
         if coeffs.len() != self.len {
             return Err(RankAdapterError::Invalid(format!(
                 "signal length {} != {}",
@@ -68,6 +80,7 @@ impl FwhtSignalSpace {
 
     /// Unrank an ordinal into a coefficient vector.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<i64>, RankAdapterError> {
+        self.validate()?;
         let digits = mixed_radix_unrank(&from_nat(ordinal), &self.radices())?;
         Ok(digits.into_iter().map(|d| d as i64).collect())
     }
@@ -119,6 +132,23 @@ mod tests {
         assert!(matches!(
             space.rank(&[5, 0]),
             Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn checked_constructor_rejects_first_out_of_range_dimensions() {
+        assert!(FwhtSignalSpace::try_new(127, 1_000_000).is_ok());
+        assert!(matches!(
+            FwhtSignalSpace::try_new(128, 2),
+            Err(RankAdapterError::LimitExceeded(_))
+        ));
+        assert!(matches!(
+            FwhtSignalSpace::try_new(2, 0),
+            Err(RankAdapterError::Invalid(_))
+        ));
+        assert!(matches!(
+            FwhtSignalSpace::try_new(2, 1_000_001),
+            Err(RankAdapterError::LimitExceeded(_))
         ));
     }
 }

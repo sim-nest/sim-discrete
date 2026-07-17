@@ -206,9 +206,13 @@ fn int_from_domain_value(value: &DomainValue) -> Result<i64, FormError> {
     }
 }
 
+pub(crate) fn non_negative_usize(value: i64, field: &str) -> Result<usize, FormError> {
+    usize::try_from(value).map_err(|_| FormError::BadToken(format!("{field}={value}")))
+}
+
 fn list_to_usize(list: &[i64]) -> Result<Vec<usize>, FormError> {
     list.iter()
-        .map(|&v| usize::try_from(v).map_err(|_| FormError::BadToken(v.to_string())))
+        .map(|&v| non_negative_usize(v, "list item"))
         .collect()
 }
 
@@ -241,9 +245,11 @@ pub fn decode_combination(s: &str) -> Result<(usize, usize, Vec<usize>), FormErr
     }
     expect_version(&tokens)?;
     match &tokens[1..] {
-        [Token::Int(n), Token::Int(k), Token::List(values)] => {
-            Ok((*n as usize, *k as usize, list_to_usize(values)?))
-        }
+        [Token::Int(n), Token::Int(k), Token::List(values)] => Ok((
+            non_negative_usize(*n, "n")?,
+            non_negative_usize(*k, "k")?,
+            list_to_usize(values)?,
+        )),
         _ => Err(FormError::BadArity("expected v1 n k [values]".to_string())),
     }
 }
@@ -396,6 +402,18 @@ mod tests {
         assert!(matches!(
             decode_matrix(&huge),
             Err(FormError::BadToken(_) | FormError::BadArity(_))
+        ));
+    }
+
+    #[test]
+    fn negative_combination_dimensions_rejected() {
+        assert!(matches!(
+            decode_combination("#(discrete/combination v1 -1 1 [0])"),
+            Err(FormError::BadToken(_))
+        ));
+        assert!(matches!(
+            decode_combination("#(discrete/combination v1 3 -1 [0])"),
+            Err(FormError::BadToken(_))
         ));
     }
 
