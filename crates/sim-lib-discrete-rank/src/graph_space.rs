@@ -52,11 +52,18 @@ impl SimpleGraphSpace {
     /// Rank an edge set (each edge `(i, j)` with `i < j`).
     pub fn rank(&self, edges: &[(usize, usize)]) -> Result<Nat, RankAdapterError> {
         let mut rank = BigUint::from(0u32);
+        let mut seen = BTreeSet::new();
         for &(i, j) in edges {
             let (lo, hi) = (i.min(j), i.max(j));
             if i == j || hi >= self.n {
                 return Err(RankAdapterError::Invalid(format!(
                     "edge ({i},{j}) invalid for n={}",
+                    self.n
+                )));
+            }
+            if !seen.insert((lo, hi)) {
+                return Err(RankAdapterError::Invalid(format!(
+                    "duplicate edge ({lo},{hi}) for n={}",
                     self.n
                 )));
             }
@@ -73,6 +80,12 @@ impl SimpleGraphSpace {
     /// Unrank an ordinal into a sorted edge set.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<(usize, usize)>, RankAdapterError> {
         let bits = from_nat(ordinal);
+        let bound = BigUint::from(1u32) << self.pairs.len();
+        if bits >= bound {
+            return Err(RankAdapterError::Invalid(format!(
+                "simple graph ordinal {bits} >= cardinality {bound}"
+            )));
+        }
         let mut edges = Vec::new();
         for (pos, &pair) in self.pairs.iter().enumerate() {
             if bits.bit(pos as u64) {
@@ -123,6 +136,24 @@ mod tests {
         let space = SimpleGraphSpace::new(3);
         assert!(matches!(
             space.rank(&[(0, 9)]),
+            Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn duplicate_edge_rejected() {
+        let space = SimpleGraphSpace::new(3);
+        assert!(matches!(
+            space.rank(&[(0, 1), (1, 0)]),
+            Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn unrank_rejects_cardinality() {
+        let space = SimpleGraphSpace::new(3);
+        assert!(matches!(
+            space.unrank(&space.cardinality()),
             Err(RankAdapterError::Invalid(_))
         ));
     }

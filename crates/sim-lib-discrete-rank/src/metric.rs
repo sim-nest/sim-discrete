@@ -6,7 +6,7 @@
 //! layer uses the integer numerator as the coordinate distance.
 
 use num_bigint::BigUint;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Hamming distance between two equal-length bit vectors.
 pub fn hamming_bits(a: &[bool], b: &[bool]) -> BigUint {
@@ -24,13 +24,21 @@ pub fn symmetric_difference(a: &[usize], b: &[usize]) -> BigUint {
 /// Kendall-tau distance between two permutations of `0..n`: the number of pairs
 /// ordered differently.
 pub fn kendall_tau(a: &[usize], b: &[usize]) -> BigUint {
-    let n = a.len();
+    let positions_b: BTreeMap<usize, usize> = b
+        .iter()
+        .enumerate()
+        .map(|(pos, &item)| (item, pos))
+        .collect();
     let mut count = 0usize;
-    for i in 0..n {
-        for j in (i + 1)..n {
-            let ord_a = a[i] < a[j];
-            let ord_b = b[i] < b[j];
-            if ord_a != ord_b {
+    for i in 0..a.len() {
+        for j in (i + 1)..a.len() {
+            let Some(&pos_i) = positions_b.get(&a[i]) else {
+                continue;
+            };
+            let Some(&pos_j) = positions_b.get(&a[j]) else {
+                continue;
+            };
+            if pos_i > pos_j {
                 count += 1;
             }
         }
@@ -82,6 +90,7 @@ mod tests {
         // Reversing 3 elements gives 3 discordant pairs.
         assert_eq!(kendall_tau(&[0, 1, 2], &[2, 1, 0]), BigUint::from(3u32));
         assert_eq!(kendall_tau(&[0, 1, 2], &[0, 1, 2]), BigUint::from(0u32));
+        assert_eq!(kendall_tau(&[0, 2, 1], &[1, 2, 0]), BigUint::from(3u32));
     }
 
     #[test]

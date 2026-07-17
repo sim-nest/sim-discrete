@@ -44,6 +44,13 @@ impl CombinationSpace {
 
     /// Rank an ascending combination.
     pub fn rank(&self, combo: &[usize]) -> Result<Nat, RankAdapterError> {
+        if combo.len() != self.k {
+            return Err(RankAdapterError::Invalid(format!(
+                "combination length {} != k {}",
+                combo.len(),
+                self.k
+            )));
+        }
         Ok(to_nat(combination_rank(combo, self.n)?))
     }
 
@@ -82,6 +89,13 @@ impl PermutationSpace {
 
     /// Rank a permutation.
     pub fn rank(&self, perm: &[usize]) -> Result<Nat, RankAdapterError> {
+        if perm.len() != self.n {
+            return Err(RankAdapterError::Invalid(format!(
+                "permutation length {} != n {}",
+                perm.len(),
+                self.n
+            )));
+        }
         Ok(to_nat(permutation_rank(perm)?))
     }
 
@@ -153,6 +167,15 @@ mod tests {
     }
 
     #[test]
+    fn combination_rank_rejects_wrong_k() {
+        let space = CombinationSpace { n: 6, k: 3 };
+        assert!(matches!(
+            space.rank(&[0, 1]),
+            Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
     fn permutation_round_trips_and_kendall() {
         let space = PermutationSpace { n: 4 };
         for i in 0..24u32 {
@@ -163,6 +186,23 @@ mod tests {
         let a = space.rank(&[0, 1, 2, 3]).unwrap();
         let b = space.rank(&[3, 2, 1, 0]).unwrap();
         assert_eq!(space.distance(&a, &b).unwrap(), nat(6));
+    }
+
+    #[test]
+    fn permutation_rank_rejects_wrong_n() {
+        let space = PermutationSpace { n: 4 };
+        assert!(matches!(
+            space.rank(&[0, 1, 2]),
+            Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn permutation_distance_uses_item_order() {
+        let space = PermutationSpace { n: 3 };
+        let a = space.rank(&[0, 2, 1]).unwrap();
+        let b = space.rank(&[1, 2, 0]).unwrap();
+        assert_eq!(space.distance(&a, &b).unwrap(), nat(3));
     }
 
     #[test]

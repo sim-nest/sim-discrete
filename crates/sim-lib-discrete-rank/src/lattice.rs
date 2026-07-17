@@ -58,7 +58,7 @@ impl BitVectorSpace {
 
     /// Unrank an ordinal into a bit vector of length `width`.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<bool>, RankAdapterError> {
-        Ok(bit_vector_unrank(&from_nat(ordinal), self.width))
+        Ok(bit_vector_unrank(&from_nat(ordinal), self.width)?)
     }
 
     /// Hamming distance between two ordinals.
@@ -113,7 +113,7 @@ impl SubsetSpace {
 
     /// Unrank an ordinal into the subset member list.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<usize>, RankAdapterError> {
-        Ok(subset_unrank(&from_nat(ordinal), self.n))
+        Ok(subset_unrank(&from_nat(ordinal), self.n)?)
     }
 
     /// Symmetric-difference distance between two ordinals.
@@ -161,5 +161,32 @@ mod tests {
         let a = space.rank(&[0, 1, 2]).unwrap();
         let b = space.rank(&[1, 2, 3]).unwrap();
         assert_eq!(space.distance(&a, &b).unwrap(), to_nat(BigUint::from(2u32)));
+    }
+
+    #[test]
+    fn bit_vector_unrank_rejects_cardinality() {
+        let space = BitVectorSpace { width: 4 };
+        assert!(matches!(
+            space.unrank(&space.cardinality()),
+            Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn subset_rank_rejects_duplicates() {
+        let space = SubsetSpace { n: 4 };
+        assert!(matches!(
+            space.rank(&[1, 1]),
+            Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn subset_unrank_rejects_cardinality() {
+        let space = SubsetSpace { n: 4 };
+        assert!(matches!(
+            space.unrank(&space.cardinality()),
+            Err(RankAdapterError::Invalid(_))
+        ));
     }
 }
