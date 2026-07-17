@@ -116,11 +116,9 @@ pub fn bellman_ford<N>(
         let mut changed = false;
         for &(a, b, w) in &arcs {
             if let Some(da) = dist[a] {
-                // An overflowing relaxation is treated as no shorter path, never
-                // a wrapped (and falsely shorter) distance.
-                let Some(nd) = da.checked_add(w) else {
-                    continue;
-                };
+                let nd = da.checked_add(w).ok_or_else(|| {
+                    GraphError::WeightOverflow("Bellman-Ford relaxation".to_string())
+                })?;
                 if dist[b].is_none_or(|best| nd < best) {
                     dist[b] = Some(nd);
                     pred[b] = Some(a);
@@ -134,12 +132,14 @@ pub fn bellman_ford<N>(
     }
     let mut negative_cycle = false;
     for &(a, b, w) in &arcs {
-        if let Some(da) = dist[a]
-            && let Some(nd) = da.checked_add(w)
-            && dist[b].is_none_or(|best| nd < best)
-        {
-            negative_cycle = true;
-            break;
+        if let Some(da) = dist[a] {
+            let nd = da.checked_add(w).ok_or_else(|| {
+                GraphError::WeightOverflow("Bellman-Ford cycle check".to_string())
+            })?;
+            if dist[b].is_none_or(|best| nd < best) {
+                negative_cycle = true;
+                break;
+            }
         }
     }
     Ok((
@@ -246,14 +246,27 @@ mod tests {
         // 2 is only reachable via an overflowing relaxation, so it stays unreached.
         assert_eq!(dj.distances[2], None);
 
-        // Bellman-Ford: two near-i64::MAX hops likewise must not wrap.
+        // Bellman-Ford: two near-i64::MAX hops fail closed instead of wrapping
+        // or silently dropping the overflowing reachable relaxation.
         let mut gi: Graph<u8, i64> = Graph::with_nodes(vec![0, 1, 2], Directedness::Directed);
         gi.add_edge(0, 1, i64::MAX - 1).unwrap();
         gi.add_edge(1, 2, i64::MAX - 1).unwrap();
-        let (res, neg) = bellman_ford(&gi, 0).unwrap();
-        assert!(!neg);
-        assert_eq!(res.distances[1], Some(i64::MAX - 1));
-        assert_eq!(res.distances[2], None);
+        assert!(matches!(
+            bellman_ford(&gi, 0),
+            Err(GraphError::WeightOverflow(_))
+        ));
+    }
+
+    #[test]
+    fn bellman_ford_rejects_negative_overflow() {
+        let mut g: Graph<u8, i64> = Graph::with_nodes(vec![0, 1, 2], Directedness::Directed);
+        g.add_edge(0, 1, i64::MIN + 1).unwrap();
+        g.add_edge(1, 2, -2).unwrap();
+
+        assert!(matches!(
+            bellman_ford(&g, 0),
+            Err(GraphError::WeightOverflow(_))
+        ));
     }
 
     #[test]

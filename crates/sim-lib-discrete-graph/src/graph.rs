@@ -118,10 +118,22 @@ impl<N, W> Graph<N, W> {
         Ok(id)
     }
 
-    /// Validate that every edge endpoint is within the node range.
+    /// Validate that edge ids match storage order and every endpoint is in range.
+    ///
+    /// Public fields keep the value easy to encode, but id-indexed consumers
+    /// require `edges[i].id == i`. Sparse, duplicate, or shuffled ids are
+    /// rejected before bridge and certificate code indexes by edge id.
     pub fn validate(&self) -> Result<(), GraphError> {
         let n = self.nodes.len();
-        for e in &self.edges {
+        let edge_count = self.edges.len();
+        for (index, e) in self.edges.iter().enumerate() {
+            if e.id != index {
+                return Err(GraphError::InvalidEdgeId {
+                    index,
+                    id: e.id,
+                    len: edge_count,
+                });
+            }
             for node in [e.source, e.target] {
                 if node >= n {
                     return Err(GraphError::InvalidEndpoint {
@@ -185,6 +197,60 @@ mod tests {
         assert!(matches!(
             r,
             Err(GraphError::InvalidEndpoint { node: 5, .. })
+        ));
+    }
+
+    #[test]
+    fn validate_rejects_sparse_edge_id() {
+        let g = Graph {
+            nodes: vec![0, 1],
+            edges: vec![Edge {
+                id: 2,
+                source: 0,
+                target: 1,
+                weight: 7,
+            }],
+            directedness: Directedness::Directed,
+        };
+
+        assert!(matches!(
+            g.validate(),
+            Err(GraphError::InvalidEdgeId {
+                index: 0,
+                id: 2,
+                len: 1,
+            })
+        ));
+    }
+
+    #[test]
+    fn validate_rejects_duplicate_edge_id() {
+        let g = Graph {
+            nodes: vec![0, 1, 2],
+            edges: vec![
+                Edge {
+                    id: 0,
+                    source: 0,
+                    target: 1,
+                    weight: 7,
+                },
+                Edge {
+                    id: 0,
+                    source: 1,
+                    target: 2,
+                    weight: 9,
+                },
+            ],
+            directedness: Directedness::Directed,
+        };
+
+        assert!(matches!(
+            g.validate(),
+            Err(GraphError::InvalidEdgeId {
+                index: 1,
+                id: 0,
+                len: 2,
+            })
         ));
     }
 

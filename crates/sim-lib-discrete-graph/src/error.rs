@@ -27,6 +27,21 @@ pub enum GraphError {
         /// The number of nodes.
         len: usize,
     },
+    /// An edge id is not the storage index required by id-indexed consumers.
+    #[error(
+        "invalid edge id at storage index {index}: id {id} is not < edge count {len} and equal to its storage index"
+    )]
+    InvalidEdgeId {
+        /// The storage index where the edge was found.
+        index: usize,
+        /// The offending edge id.
+        id: usize,
+        /// The number of stored edge records.
+        len: usize,
+    },
+    /// A graph weight sum or path relaxation overflowed its representation.
+    #[error("graph weight overflow: {0}")]
+    WeightOverflow(String),
     /// A node index passed to an algorithm was outside the node range.
     #[error("node {node} out of range: node count {count}")]
     NodeOutOfRange {

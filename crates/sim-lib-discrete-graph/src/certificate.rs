@@ -8,9 +8,9 @@
 
 use crate::error::GraphError;
 use crate::graph::Graph;
+use crate::mst::{MstWeight, checked_mst_add};
 use crate::unionfind::UnionFind;
 use core::fmt::Display;
-use core::ops::Add;
 
 /// A spanning tree result: tree edge ids (ascending) and the total weight.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,9 +79,14 @@ fn tree_path_max<W: Ord + Clone>(
 /// Verify that `cert` describes a minimum spanning tree of `graph`.
 pub fn verify_mst<N, W>(graph: &Graph<N, W>, cert: &MstCertificate) -> Result<(), GraphError>
 where
-    W: Ord + Clone + Default + Add<Output = W> + Display,
+    W: MstWeight + Display,
 {
     graph.validate()?;
+    if graph.is_directed() {
+        return Err(GraphError::WrongGraphKind(
+            "MST certificate requires an undirected graph".to_string(),
+        ));
+    }
     let n = graph.node_count();
 
     // Resolve tree edges; reject unknown ids and self-loops.
@@ -122,7 +127,7 @@ where
     // Recorded total weight must match the recomputed sum.
     let mut total = W::default();
     for e in &tree_edges {
-        total = total + e.weight.clone();
+        total = checked_mst_add(&total, &e.weight)?;
     }
     if format!("{total}") != cert.total_weight_repr {
         return Err(invalid("total weight mismatch"));
@@ -191,6 +196,9 @@ fn tree_dist<N>(
     let result = match cert.predecessors[v] {
         None => None,
         Some(u) => {
+            if u >= cert.predecessors.len() {
+                return Err(invalid("predecessor out of range"));
+            }
             if visiting[v] {
                 return Err(invalid("predecessor cycle"));
             }
@@ -202,7 +210,10 @@ fn tree_dist<N>(
                 Some(d_u) => {
                     let w = edge_weight(graph, u, v)
                         .ok_or_else(|| invalid("predecessor edge missing"))?;
-                    Some(d_u + w)
+                    Some(
+                        d_u.checked_add(w)
+                            .ok_or_else(|| invalid("shortest-path distance overflow"))?,
+                    )
                 }
             }
         }
@@ -227,6 +238,15 @@ pub fn verify_shortest_paths<N>(
     if cert.predecessors[cert.source].is_some() {
         return Err(invalid("source must have no predecessor"));
     }
+    for (node, pred) in cert.predecessors.iter().enumerate() {
+        if let Some(parent) = pred
+            && *parent >= n
+        {
+            return Err(invalid(&format!(
+                "predecessor out of range for node {node}"
+            )));
+        }
+    }
 
     let mut memo: Vec<Option<Option<i64>>> = vec![None; n];
     let mut visiting = vec![false; n];
@@ -248,7 +268,10 @@ pub fn verify_shortest_paths<N>(
                 match dist[b] {
                     None => return Err(invalid("reachable node missing from tree")),
                     Some(db) => {
-                        if db > da + e.weight {
+                        let nd = da
+                            .checked_add(e.weight)
+                            .ok_or_else(|| invalid("shortest-path relaxation overflow"))?;
+                        if db > nd {
                             return Err(invalid("edge violates shortest-path relaxation"));
                         }
                     }
@@ -298,5 +321,80 @@ mod tests {
             predecessors: preds,
         };
         assert!(verify_shortest_paths(&g, &cert).is_err());
+    }
+
+    #[test]
+    fn predecessor_out_of_range_is_invalid_certificate() {
+        let mut g: Graph<u8, i64> = Graph::with_nodes(vec![0, 1], Directedness::Directed);
+        g.add_edge(0, 1, 1).unwrap();
+        let cert = ShortestPathCertificate {
+            source: 0,
+            predecessors: vec![None, Some(2)],
+        };
+
+        assert!(matches!(
+            verify_shortest_paths(&g, &cert),
+            Err(GraphError::CertificateInvalid(_))
+        ));
+    }
+
+    #[test]
+    fn shortest_path_certificate_rejects_distance_overflow() {
+        let mut max_graph: Graph<u8, i64> =
+            Graph::with_nodes(vec![0, 1, 2], Directedness::Directed);
+        max_graph.add_edge(0, 1, i64::MAX).unwrap();
+        max_graph.add_edge(1, 2, 1).unwrap();
+        let max_cert = ShortestPathCertificate {
+            source: 0,
+            predecessors: vec![None, Some(0), Some(1)],
+        };
+        assert!(matches!(
+            verify_shortest_paths(&max_graph, &max_cert),
+            Err(GraphError::CertificateInvalid(_))
+        ));
+
+        let mut min_graph: Graph<u8, i64> =
+            Graph::with_nodes(vec![0, 1, 2], Directedness::Directed);
+        min_graph.add_edge(0, 1, i64::MIN).unwrap();
+        min_graph.add_edge(1, 2, -1).unwrap();
+        let min_cert = ShortestPathCertificate {
+            source: 0,
+            predecessors: vec![None, Some(0), Some(1)],
+        };
+        assert!(matches!(
+            verify_shortest_paths(&min_graph, &min_cert),
+            Err(GraphError::CertificateInvalid(_))
+        ));
+    }
+
+    #[test]
+    fn mst_certificate_rejects_directed_graph() {
+        let mut g: Graph<u8, u64> = Graph::with_nodes(vec![0, 1], Directedness::Directed);
+        g.add_edge(0, 1, 1).unwrap();
+        let cert = MstCertificate {
+            edge_ids: vec![0],
+            total_weight_repr: "1".to_string(),
+        };
+
+        assert!(matches!(
+            verify_mst(&g, &cert),
+            Err(GraphError::WrongGraphKind(_))
+        ));
+    }
+
+    #[test]
+    fn mst_certificate_rejects_total_weight_overflow() {
+        let mut g: Graph<u8, u64> = Graph::with_nodes(vec![0, 1, 2], Directedness::Undirected);
+        g.add_edge(0, 1, u64::MAX).unwrap();
+        g.add_edge(1, 2, 1).unwrap();
+        let cert = MstCertificate {
+            edge_ids: vec![0, 1],
+            total_weight_repr: "0".to_string(),
+        };
+
+        assert!(matches!(
+            verify_mst(&g, &cert),
+            Err(GraphError::WeightOverflow(_))
+        ));
     }
 }
