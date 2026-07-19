@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod feature_map;
 mod simdoc;
 
 fn main() {

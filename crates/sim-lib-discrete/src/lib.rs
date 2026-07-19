@@ -19,6 +19,8 @@
 pub mod cards;
 #[cfg(feature = "citizen")]
 mod citizen;
+#[cfg(feature = "runtime")]
+mod claims;
 pub mod cookbook;
 pub mod forms;
 

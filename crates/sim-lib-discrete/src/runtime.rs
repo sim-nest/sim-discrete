@@ -266,12 +266,22 @@ pub fn op_exports() -> Vec<Export> {
 /// Install the discrete runtime lib (idempotent).
 pub fn install_discrete_lib(cx: &mut Cx) -> Result<()> {
     sim_lib_core::install_once(cx, &DiscreteLib)?;
+    let lib_id = cx
+        .registry()
+        .lib(&manifest_name())
+        .ok_or_else(|| Error::Lib(format!("{} was not installed", manifest_name())))?
+        .id;
+    crate::claims::publish_discrete_card_claims_for_lib(cx, lib_id)?;
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sim_kernel::{
+        ClaimPattern, Ref,
+        card::{card_for_ref, card_help_predicate, card_kind_predicate},
+    };
     use sim_test_support::core_cx;
     #[cfg(feature = "citizen")]
     use std::sync::Arc;
@@ -293,12 +303,81 @@ mod tests {
         }
     }
 
+    fn table_value<'a>(expr: &'a Expr, key: &str) -> Option<&'a Expr> {
+        let Expr::Map(entries) = expr else {
+            return None;
+        };
+        entries.iter().find_map(|(entry_key, entry_value)| {
+            let Expr::Symbol(entry_key) = entry_key else {
+                return None;
+            };
+            (entry_key == &Symbol::new(key)).then_some(entry_value)
+        })
+    }
+
+    fn assert_has_claim(cx: &Cx, subject: Ref, predicate: Symbol, object: Ref) {
+        let claims = cx
+            .query_facts(ClaimPattern::exact(subject, predicate, object))
+            .unwrap();
+        assert_eq!(claims.len(), 1);
+    }
+
     #[test]
     fn lib_installs_idempotently() {
         let mut cx = core_cx();
         install_discrete_lib(&mut cx).unwrap();
         install_discrete_lib(&mut cx).unwrap();
         assert!(cx.registry().lib(&manifest_name()).is_some());
+    }
+
+    #[test]
+    fn install_publishes_facade_cards_to_browse_claims() {
+        let mut cx = core_cx();
+        install_discrete_lib(&mut cx).unwrap();
+        install_discrete_lib(&mut cx).unwrap();
+
+        for card in crate::discrete_cards() {
+            let subject = Ref::Symbol(crate::claims::discrete_card_symbol(card.key));
+            assert_has_claim(
+                &cx,
+                subject.clone(),
+                card_kind_predicate(),
+                Ref::Symbol(crate::claims::discrete_card_kind()),
+            );
+
+            let help_claims = cx
+                .query_facts(ClaimPattern {
+                    subject: Some(subject.clone()),
+                    predicate: Some(card_help_predicate()),
+                    object: None,
+                    include_revoked: false,
+                })
+                .unwrap();
+            assert_eq!(help_claims.len(), 1);
+
+            let card_value = card_for_ref(&mut cx, subject).unwrap();
+            let expr = card_value.object().as_expr(&mut cx).unwrap();
+            assert_eq!(
+                table_value(&expr, "help"),
+                Some(&Expr::String(card.summary.to_owned()))
+            );
+        }
+    }
+
+    #[cfg(feature = "rank")]
+    #[test]
+    fn install_publishes_rank_space_cards_to_browse_claims() {
+        let mut cx = core_cx();
+        install_discrete_lib(&mut cx).unwrap();
+
+        for card in crate::rank::discrete_rank_cards() {
+            assert_has_claim(
+                &cx,
+                Ref::Symbol(crate::claims::discrete_card_symbol(card.key)),
+                card_kind_predicate(),
+                Ref::Symbol(sim_kernel::rank::rank_space_kind()),
+            );
+        }
     }
 
     #[test]

@@ -25,7 +25,7 @@ pub fn run(args: Vec<String>) -> Result<(), String> {
         .status()
         .map_err(|err| format!("run shared simdoc encoder: {err}"))?;
     if status.success() {
-        Ok(())
+        crate::feature_map::check(&root)
     } else {
         Err(format!("shared simdoc encoder failed with status {status}"))
     }
