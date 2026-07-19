@@ -108,8 +108,10 @@ The public API is documentation-gated: each crate's `lib.rs` denies
 `missing_docs`, so every public item, field, and variant must be documented for
 the crate to build.
 
-Each crate's runnable examples are its embedded `recipes/` tree plus the rustdoc
-`# Examples` doctests; there are no stub recipe directories.
+Each crate embeds cookbook recipe records. The descriptor recipes document the
+SIM forms a reader can inspect, and the `binomial-count` recipe carries a live
+expectation that evaluates through the sandbox. Rustdoc `# Examples` remain the
+compiled examples for direct Rust use.
 
 ## Validation
 
