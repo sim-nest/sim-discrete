@@ -2,6 +2,7 @@
 
 use crate::descriptor::{SpaceDescriptor, from_nat, to_nat};
 use crate::error::RankAdapterError;
+use crate::limits::DiscreteRankLimits;
 use num_bigint::BigUint;
 use sim_lib_rank::Nat;
 use std::collections::BTreeSet;
@@ -17,15 +18,21 @@ pub struct SimpleGraphSpace {
 }
 
 impl SimpleGraphSpace {
-    /// Construct the space for `n` nodes.
+    /// Construct the space for `n` nodes, panicking if `n` exceeds default limits.
     pub fn new(n: usize) -> Self {
+        Self::try_new(n).expect("simple-graph node count should fit default rank limits")
+    }
+
+    /// Construct the space for `n` nodes after checking eager allocation limits.
+    pub fn try_new(n: usize) -> Result<Self, RankAdapterError> {
+        DiscreteRankLimits::DEFAULT.check_simple_graph_nodes(n)?;
         let mut pairs = Vec::new();
         for i in 0..n {
             for j in (i + 1)..n {
                 pairs.push((i, j));
             }
         }
-        SimpleGraphSpace { n, pairs }
+        Ok(SimpleGraphSpace { n, pairs })
     }
 
     /// The space descriptor.
@@ -52,11 +59,18 @@ impl SimpleGraphSpace {
     /// Rank an edge set (each edge `(i, j)` with `i < j`).
     pub fn rank(&self, edges: &[(usize, usize)]) -> Result<Nat, RankAdapterError> {
         let mut rank = BigUint::from(0u32);
+        let mut seen = BTreeSet::new();
         for &(i, j) in edges {
             let (lo, hi) = (i.min(j), i.max(j));
             if i == j || hi >= self.n {
                 return Err(RankAdapterError::Invalid(format!(
                     "edge ({i},{j}) invalid for n={}",
+                    self.n
+                )));
+            }
+            if !seen.insert((lo, hi)) {
+                return Err(RankAdapterError::Invalid(format!(
+                    "duplicate edge ({lo},{hi}) for n={}",
                     self.n
                 )));
             }
@@ -73,6 +87,12 @@ impl SimpleGraphSpace {
     /// Unrank an ordinal into a sorted edge set.
     pub fn unrank(&self, ordinal: &Nat) -> Result<Vec<(usize, usize)>, RankAdapterError> {
         let bits = from_nat(ordinal);
+        let bound = BigUint::from(1u32) << self.pairs.len();
+        if bits >= bound {
+            return Err(RankAdapterError::Invalid(format!(
+                "simple graph ordinal {bits} >= cardinality {bound}"
+            )));
+        }
         let mut edges = Vec::new();
         for (pos, &pair) in self.pairs.iter().enumerate() {
             if bits.bit(pos as u64) {
@@ -124,6 +144,33 @@ mod tests {
         assert!(matches!(
             space.rank(&[(0, 9)]),
             Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn duplicate_edge_rejected() {
+        let space = SimpleGraphSpace::new(3);
+        assert!(matches!(
+            space.rank(&[(0, 1), (1, 0)]),
+            Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn unrank_rejects_cardinality() {
+        let space = SimpleGraphSpace::new(3);
+        assert!(matches!(
+            space.unrank(&space.cardinality()),
+            Err(RankAdapterError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn checked_constructor_rejects_first_out_of_range_node_count() {
+        assert_eq!(SimpleGraphSpace::try_new(16).unwrap().edge_slots(), 120);
+        assert!(matches!(
+            SimpleGraphSpace::try_new(17),
+            Err(RankAdapterError::LimitExceeded(_))
         ));
     }
 }

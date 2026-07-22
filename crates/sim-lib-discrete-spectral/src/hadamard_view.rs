@@ -42,7 +42,8 @@ impl HadamardView {
             )));
         }
         let n = self.n;
-        let mut m = Matrix::filled(n, n, RealF64(0.0));
+        let mut m = Matrix::try_filled_with_limits(n, n, RealF64(0.0), limits)
+            .map_err(|err| SpectralError::LimitExceeded(err.to_string()))?;
         for i in 0..n {
             for j in 0..n {
                 let sign = if (i & j).count_ones() % 2 == 0 {
@@ -50,7 +51,8 @@ impl HadamardView {
                 } else {
                     -1.0
                 };
-                m.data[i * n + j] = RealF64(sign);
+                m.set(i, j, RealF64(sign))
+                    .map_err(|err| SpectralError::LimitExceeded(err.to_string()))?;
             }
         }
         Ok(m)

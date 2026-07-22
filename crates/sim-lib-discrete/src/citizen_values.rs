@@ -171,18 +171,16 @@ impl MstCertificateDescriptor {
 impl BitVectorSpaceDescriptor {
     /// Reconstruct the bit-vector rank space from the descriptor form.
     pub fn space(&self) -> Result<BitVectorSpace> {
-        Ok(BitVectorSpace {
-            width: rank_usize(&self.form, "bit-vector", 1)?[0],
-        })
+        BitVectorSpace::try_new(rank_usize(&self.form, "bit-vector", 1)?[0])
+            .map_err(super::discrete_rank_error)
     }
 }
 
 impl SubsetSpaceDescriptor {
     /// Reconstruct the subset rank space from the descriptor form.
     pub fn space(&self) -> Result<SubsetSpace> {
-        Ok(SubsetSpace {
-            n: rank_usize(&self.form, "subset", 1)?[0],
-        })
+        SubsetSpace::try_new(rank_usize(&self.form, "subset", 1)?[0])
+            .map_err(super::discrete_rank_error)
     }
 }
 
@@ -190,37 +188,31 @@ impl CombinationSpaceDescriptor {
     /// Reconstruct the combination rank space from the descriptor form.
     pub fn space(&self) -> Result<CombinationSpace> {
         let params = rank_usize(&self.form, "combination", 2)?;
-        Ok(CombinationSpace {
-            n: params[0],
-            k: params[1],
-        })
+        CombinationSpace::try_new(params[0], params[1]).map_err(super::discrete_rank_error)
     }
 }
 
 impl PermutationSpaceDescriptor {
     /// Reconstruct the permutation rank space from the descriptor form.
     pub fn space(&self) -> Result<PermutationSpace> {
-        Ok(PermutationSpace {
-            n: rank_usize(&self.form, "permutation", 1)?[0],
-        })
+        PermutationSpace::try_new(rank_usize(&self.form, "permutation", 1)?[0])
+            .map_err(super::discrete_rank_error)
     }
 }
 
 impl BoundedIntVectorSpaceDescriptor {
     /// Reconstruct the bounded-int-vector rank space from the descriptor form.
     pub fn space(&self) -> Result<BoundedIntVectorSpace> {
-        Ok(BoundedIntVectorSpace {
-            radices: rank_u64(&self.form, "bounded-int-vector", None)?,
-        })
+        BoundedIntVectorSpace::try_new(rank_u64(&self.form, "bounded-int-vector", None)?)
+            .map_err(super::discrete_rank_error)
     }
 }
 
 impl SimpleGraphSpaceDescriptor {
     /// Reconstruct the simple-graph rank space from the descriptor form.
     pub fn space(&self) -> Result<SimpleGraphSpace> {
-        Ok(SimpleGraphSpace::new(
-            rank_usize(&self.form, "simple-graph", 1)?[0],
-        ))
+        SimpleGraphSpace::try_new(rank_usize(&self.form, "simple-graph", 1)?[0])
+            .map_err(super::discrete_rank_error)
     }
 }
 
@@ -228,11 +220,9 @@ impl FwhtSignalSpaceDescriptor {
     /// Reconstruct the FWHT-signal rank space from the descriptor form.
     pub fn space(&self) -> Result<FwhtSignalSpace> {
         let params = rank_u64(&self.form, "fwht-signal", Some(2))?;
-        Ok(FwhtSignalSpace {
-            len: usize::try_from(params[0])
-                .map_err(|_| Error::Eval("FWHT signal length is out of range".to_owned()))?,
-            alphabet: params[1],
-        })
+        let len = usize::try_from(params[0])
+            .map_err(|_| Error::Eval("FWHT signal length is out of range".to_owned()))?;
+        FwhtSignalSpace::try_new(len, params[1]).map_err(super::discrete_rank_error)
     }
 }
 

@@ -1,18 +1,848 @@
 {
-  "schema": "sim.repo-contract.v1",
-  "repo": "sim-discrete",
-  "lanes": [
-    "target/doc/",
-    "docs/agents/cards.jsonl",
-    "docs/humans/",
-    "docs/diagrams/src/",
-    "docs/diagrams/generated/"
+  "card_count": 21,
+  "cards": [
+    {
+      "id": "browse/catalog",
+      "kind": "browse-root",
+      "owner": "workspace",
+      "summary": "root browse catalog"
+    },
+    {
+      "id": "cookbook/discrete",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete",
+      "summary": "Runtime-facing discrete matrix, graph, and transform descriptors."
+    },
+    {
+      "id": "cookbook/discrete-algebra",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-algebra",
+      "summary": "Small semiring and matrix-view descriptors."
+    },
+    {
+      "id": "cookbook/discrete-comb",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-comb",
+      "summary": "Combination and permutation descriptors."
+    },
+    {
+      "id": "cookbook/discrete-graph",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-graph",
+      "summary": "Graph, edge, traversal, and certificate descriptors."
+    },
+    {
+      "id": "cookbook/discrete-rank",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-rank",
+      "summary": "Rank-space descriptors for discrete objects."
+    },
+    {
+      "id": "cookbook/discrete-spectral",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-spectral",
+      "summary": "FWHT, Walsh signature, and spectral descriptor examples."
+    },
+    {
+      "id": "discrete/algebra",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Semiring matrices, powers, and Kleene closure (the spine)."
+    },
+    {
+      "id": "discrete/combinatorics",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Exact counts, lazy enumerators, and canonical ordinals."
+    },
+    {
+      "id": "discrete/graph",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Graphs, MST, shortest paths, and certificates."
+    },
+    {
+      "id": "discrete/music-adapter",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "FWHT-based melody analysis (consumes the spectral atlas)."
+    },
+    {
+      "id": "discrete/rank",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Finite rank spaces, metrics, and invariant grade compilers."
+    },
+    {
+      "id": "discrete/spectral",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "FWHT, XOR/subset convolution, and Walsh signatures."
+    },
+    {
+      "id": "rank/discrete/bit-vector",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Fixed-width bit vectors."
+    },
+    {
+      "id": "rank/discrete/bounded-int-vector",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Mixed-radix integer vectors."
+    },
+    {
+      "id": "rank/discrete/combination",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "k-subsets of n."
+    },
+    {
+      "id": "rank/discrete/fwht-signal",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Finite-alphabet integer signals."
+    },
+    {
+      "id": "rank/discrete/permutation",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Permutations of n elements."
+    },
+    {
+      "id": "rank/discrete/simple-graph",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Labeled simple undirected graphs on n nodes."
+    },
+    {
+      "id": "rank/discrete/subset",
+      "kind": "static-card",
+      "owner": "workspace",
+      "summary": "Subsets of a finite ground set."
+    },
+    {
+      "id": "registry/catalog",
+      "kind": "browse-registry",
+      "owner": "workspace",
+      "summary": "registry catalog browse card"
+    }
   ],
-  "contracts": [
-    "docs/generated/provenance.json",
-    "docs/generated/repo-contract.json",
-    "docs/generated/rustdoc-index.json",
-    "docs/generated/card-index.json",
-    "docs/generated/feature-map.json"
+  "citizen_count": 0,
+  "citizens": [],
+  "generator": "xtask repo-contract v1",
+  "group_count": 1,
+  "group_order": [
+    "workspace"
+  ],
+  "groups": {
+    "workspace": [
+      "sim-lib-discrete",
+      "sim-lib-discrete-algebra",
+      "sim-lib-discrete-comb",
+      "sim-lib-discrete-graph",
+      "sim-lib-discrete-rank",
+      "sim-lib-discrete-spectral",
+      "xtask"
+    ]
+  },
+  "non_citizen_exemption_count": 0,
+  "non_citizen_exemptions": [],
+  "package_count": 7,
+  "packages": [
+    {
+      "crate_name": "sim_lib_discrete",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": true,
+          "package": "sim-lib-discrete-algebra",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": true,
+          "package": "sim-lib-discrete-comb",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": true,
+          "package": "sim-lib-discrete-graph",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": true,
+          "package": "sim-lib-discrete-rank",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": true,
+          "package": "sim-lib-discrete-spectral",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Discrete-math family facade.",
+      "features": [
+        {
+          "edges": [
+            "dep:sim-lib-discrete-algebra"
+          ],
+          "name": "algebra",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-algebra"
+            }
+          ]
+        },
+        {
+          "edges": [
+            "rank",
+            "dep:sim-citizen",
+            "dep:sim-citizen-derive",
+            "dep:sim-value"
+          ],
+          "name": "citizen",
+          "workspace_edges": []
+        },
+        {
+          "edges": [
+            "dep:sim-lib-discrete-comb"
+          ],
+          "name": "comb",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-comb"
+            }
+          ]
+        },
+        {
+          "edges": [],
+          "name": "default",
+          "workspace_edges": []
+        },
+        {
+          "edges": [
+            "algebra",
+            "graph",
+            "comb",
+            "spectral"
+          ],
+          "name": "full",
+          "workspace_edges": []
+        },
+        {
+          "edges": [
+            "algebra",
+            "dep:sim-lib-discrete-graph"
+          ],
+          "name": "graph",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-graph"
+            }
+          ]
+        },
+        {
+          "edges": [
+            "algebra",
+            "graph",
+            "comb",
+            "spectral",
+            "dep:sim-lib-discrete-rank"
+          ],
+          "name": "rank",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-rank"
+            }
+          ]
+        },
+        {
+          "edges": [
+            "full",
+            "dep:sim-lib-core"
+          ],
+          "name": "runtime",
+          "workspace_edges": []
+        },
+        {
+          "edges": [
+            "algebra",
+            "dep:sim-lib-discrete-spectral"
+          ],
+          "name": "spectral",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-spectral"
+            }
+          ]
+        }
+      ],
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete/Cargo.toml",
+      "name": "sim-lib-discrete",
+      "publish": "true",
+      "root": "crates/sim-lib-discrete",
+      "rustdoc_summary": "Discrete-math family facade.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_lib_discrete",
+          "src": "crates/sim-lib-discrete/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-lib-discrete/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_lib_discrete_algebra",
+      "dependencies": [],
+      "description": "Discrete algebra spine.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-algebra/Cargo.toml",
+      "name": "sim-lib-discrete-algebra",
+      "publish": "true",
+      "root": "crates/sim-lib-discrete-algebra",
+      "rustdoc_summary": "Discrete algebra spine.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_lib_discrete_algebra",
+          "src": "crates/sim-lib-discrete-algebra/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-lib-discrete-algebra/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_lib_discrete_comb",
+      "dependencies": [],
+      "description": "Discrete combinatorics.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-comb/Cargo.toml",
+      "name": "sim-lib-discrete-comb",
+      "publish": "true",
+      "root": "crates/sim-lib-discrete-comb",
+      "rustdoc_summary": "Discrete combinatorics.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_lib_discrete_comb",
+          "src": "crates/sim-lib-discrete-comb/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-lib-discrete-comb/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_lib_discrete_graph",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-lib-discrete-algebra",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Discrete graph algorithms.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-graph/Cargo.toml",
+      "name": "sim-lib-discrete-graph",
+      "publish": "true",
+      "root": "crates/sim-lib-discrete-graph",
+      "rustdoc_summary": "Discrete graph algorithms.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_lib_discrete_graph",
+          "src": "crates/sim-lib-discrete-graph/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-lib-discrete-graph/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_lib_discrete_rank",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-lib-discrete-algebra",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-lib-discrete-comb",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-lib-discrete-graph",
+          "rename": null,
+          "target": null
+        },
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-lib-discrete-spectral",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Discrete rank adapters.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-rank/Cargo.toml",
+      "name": "sim-lib-discrete-rank",
+      "publish": "true",
+      "root": "crates/sim-lib-discrete-rank",
+      "rustdoc_summary": "Discrete rank adapters.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_lib_discrete_rank",
+          "src": "crates/sim-lib-discrete-rank/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-lib-discrete-rank/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim_lib_discrete_spectral",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-lib-discrete-algebra",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Discrete spectral atlas.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-spectral/Cargo.toml",
+      "name": "sim-lib-discrete-spectral",
+      "publish": "true",
+      "root": "crates/sim-lib-discrete-spectral",
+      "rustdoc_summary": "Discrete spectral atlas.",
+      "target_kinds": [
+        "custom-build",
+        "lib"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "kind": [
+            "lib"
+          ],
+          "name": "sim_lib_discrete_spectral",
+          "src": "crates/sim-lib-discrete-spectral/src/lib.rs"
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src": "crates/sim-lib-discrete-spectral/build.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "xtask",
+      "dependencies": [],
+      "description": "SIM workspace package for xtask.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "xtask/Cargo.toml",
+      "name": "xtask",
+      "publish": "false",
+      "root": "xtask",
+      "rustdoc_summary": "SIM workspace package for xtask.",
+      "target_kinds": [
+        "bin"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "bin"
+          ],
+          "name": "xtask",
+          "src": "xtask/src/main.rs"
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "api_docs": "target/doc/",
+    "generated_by": "cargo run -p xtask -- simdoc",
+    "generation_timestamp": "2026-07-15T01:30:10+02:00",
+    "generator": "xtask repo-contract v1",
+    "git_commit": "9ce3608f77706b7ea9905bd3fc1671cd875ef094",
+    "repo": "sim-discrete",
+    "schema": "sim.provenance.v1",
+    "source_commit": "9ce3608f77706b7ea9905bd3fc1671cd875ef094",
+    "source_remote": "https://github.com/sim-nest/sim-discrete",
+    "validation_commands": [
+      "cargo fmt --all --check",
+      "cargo test",
+      "cargo clippy --all-targets -- -D warnings",
+      "cargo doc --no-deps",
+      "cargo run -p xtask -- simdoc --check",
+      "cargo run -p xtask -- check-file-sizes",
+      "cargo run -p xtask -- repo-contract --check --repo .",
+      "cargo run -p xtask -- validation-matrix --check --repo .",
+      "cargo run -p xtask -- crate-catalog --check --repo ."
+    ],
+    "workspace_hash": "b1a7381a172fe924",
+    "workspace_hash_algorithm": "fnv1a64",
+    "workspace_hash_input_count": 100,
+    "workspace_hash_inputs": [
+      "Cargo.toml",
+      "crates/sim-lib-discrete/Cargo.toml",
+      "crates/sim-lib-discrete/build.rs",
+      "crates/sim-lib-discrete/recipes/01-basics/binomial-count/recipe.toml",
+      "crates/sim-lib-discrete/recipes/01-basics/matrix-runtime/recipe.toml",
+      "crates/sim-lib-discrete/recipes/book.toml",
+      "crates/sim-lib-discrete/src/cards.rs",
+      "crates/sim-lib-discrete/src/citizen.rs",
+      "crates/sim-lib-discrete/src/citizen_tests.rs",
+      "crates/sim-lib-discrete/src/citizen_values.rs",
+      "crates/sim-lib-discrete/src/claims.rs",
+      "crates/sim-lib-discrete/src/cookbook.rs",
+      "crates/sim-lib-discrete/src/forms.rs",
+      "crates/sim-lib-discrete/src/forms_extra.rs",
+      "crates/sim-lib-discrete/src/lib.rs",
+      "crates/sim-lib-discrete/src/runtime.rs",
+      "crates/sim-lib-discrete-algebra/Cargo.toml",
+      "crates/sim-lib-discrete-algebra/build.rs",
+      "crates/sim-lib-discrete-algebra/recipes/01-basics/semiring-matrix/recipe.toml",
+      "crates/sim-lib-discrete-algebra/recipes/book.toml",
+      "crates/sim-lib-discrete-algebra/src/boolean.rs",
+      "crates/sim-lib-discrete-algebra/src/closure.rs",
+      "crates/sim-lib-discrete-algebra/src/cookbook.rs",
+      "crates/sim-lib-discrete-algebra/src/counting.rs",
+      "crates/sim-lib-discrete-algebra/src/error.rs",
+      "crates/sim-lib-discrete-algebra/src/gf2.rs",
+      "crates/sim-lib-discrete-algebra/src/lib.rs",
+      "crates/sim-lib-discrete-algebra/src/matrix.rs",
+      "crates/sim-lib-discrete-algebra/src/power.rs",
+      "crates/sim-lib-discrete-algebra/src/real.rs",
+      "crates/sim-lib-discrete-algebra/src/semiring.rs",
+      "crates/sim-lib-discrete-algebra/src/sparse.rs",
+      "crates/sim-lib-discrete-algebra/src/tropical_max.rs",
+      "crates/sim-lib-discrete-algebra/src/tropical_min.rs",
+      "crates/sim-lib-discrete-algebra/src/views.rs",
+      "crates/sim-lib-discrete-comb/Cargo.toml",
+      "crates/sim-lib-discrete-comb/build.rs",
+      "crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/recipe.toml",
+      "crates/sim-lib-discrete-comb/recipes/book.toml",
+      "crates/sim-lib-discrete-comb/src/bit_vector.rs",
+      "crates/sim-lib-discrete-comb/src/cards.rs",
+      "crates/sim-lib-discrete-comb/src/combination.rs",
+      "crates/sim-lib-discrete-comb/src/cookbook.rs",
+      "crates/sim-lib-discrete-comb/src/count.rs",
+      "crates/sim-lib-discrete-comb/src/error.rs",
+      "crates/sim-lib-discrete-comb/src/lib.rs",
+      "crates/sim-lib-discrete-comb/src/mixed_radix.rs",
+      "crates/sim-lib-discrete-comb/src/partition.rs",
+      "crates/sim-lib-discrete-comb/src/permutation.rs",
+      "crates/sim-lib-discrete-comb/src/subset.rs",
+      "crates/sim-lib-discrete-graph/Cargo.toml",
+      "crates/sim-lib-discrete-graph/build.rs",
+      "crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/recipe.toml",
+      "crates/sim-lib-discrete-graph/recipes/book.toml",
+      "crates/sim-lib-discrete-graph/src/bridge.rs",
+      "crates/sim-lib-discrete-graph/src/cards.rs",
+      "crates/sim-lib-discrete-graph/src/certificate.rs",
+      "crates/sim-lib-discrete-graph/src/connectivity.rs",
+      "crates/sim-lib-discrete-graph/src/cookbook.rs",
+      "crates/sim-lib-discrete-graph/src/edge.rs",
+      "crates/sim-lib-discrete-graph/src/error.rs",
+      "crates/sim-lib-discrete-graph/src/graph.rs",
+      "crates/sim-lib-discrete-graph/src/intring.rs",
+      "crates/sim-lib-discrete-graph/src/lib.rs",
+      "crates/sim-lib-discrete-graph/src/mst.rs",
+      "crates/sim-lib-discrete-graph/src/path.rs",
+      "crates/sim-lib-discrete-graph/src/traversal.rs",
+      "crates/sim-lib-discrete-graph/src/unionfind.rs",
+      "crates/sim-lib-discrete-rank/Cargo.toml",
+      "crates/sim-lib-discrete-rank/build.rs",
+      "crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/recipe.toml",
+      "crates/sim-lib-discrete-rank/recipes/book.toml",
+      "crates/sim-lib-discrete-rank/src/cards.rs",
+      "crates/sim-lib-discrete-rank/src/combinatorial.rs",
+      "crates/sim-lib-discrete-rank/src/cookbook.rs",
+      "crates/sim-lib-discrete-rank/src/descriptor.rs",
+      "crates/sim-lib-discrete-rank/src/error.rs",
+      "crates/sim-lib-discrete-rank/src/grade.rs",
+      "crates/sim-lib-discrete-rank/src/graph_space.rs",
+      "crates/sim-lib-discrete-rank/src/lattice.rs",
+      "crates/sim-lib-discrete-rank/src/lib.rs",
+      "crates/sim-lib-discrete-rank/src/limits.rs",
+      "crates/sim-lib-discrete-rank/src/metric.rs",
+      "crates/sim-lib-discrete-rank/src/signal_space.rs",
+      "crates/sim-lib-discrete-rank/src/tree_metric.rs",
+      "crates/sim-lib-discrete-spectral/Cargo.toml",
+      "crates/sim-lib-discrete-spectral/build.rs",
+      "crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/recipe.toml",
+      "crates/sim-lib-discrete-spectral/recipes/book.toml",
+      "crates/sim-lib-discrete-spectral/src/convolution.rs",
+      "crates/sim-lib-discrete-spectral/src/cookbook.rs",
+      "crates/sim-lib-discrete-spectral/src/error.rs",
+      "crates/sim-lib-discrete-spectral/src/hadamard_view.rs",
+      "crates/sim-lib-discrete-spectral/src/lib.rs",
+      "crates/sim-lib-discrete-spectral/src/signal.rs",
+      "crates/sim-lib-discrete-spectral/src/signature.rs",
+      "crates/sim-lib-discrete-spectral/src/subset.rs",
+      "crates/sim-lib-discrete-spectral/src/transform.rs",
+      "features.toml",
+      "xtask/Cargo.toml"
+    ]
+  },
+  "recipe_book_count": 6,
+  "recipes": [
+    {
+      "book": "discrete",
+      "book_toml": "crates/sim-lib-discrete/recipes/book.toml",
+      "card_id": "cookbook/discrete",
+      "group": "workspace",
+      "package": "sim-lib-discrete",
+      "recipe_count": 2,
+      "recipes": [
+        {
+          "card_id": "discrete/01-basics/binomial-count",
+          "codec": "lisp",
+          "id": "binomial-count",
+          "package": "sim-lib-discrete",
+          "recipe_toml": "crates/sim-lib-discrete/recipes/01-basics/binomial-count/recipe.toml",
+          "title": "Count combinations with a binomial coefficient"
+        },
+        {
+          "card_id": "discrete/01-basics/matrix-runtime",
+          "codec": "lisp",
+          "id": "matrix-runtime",
+          "package": "sim-lib-discrete",
+          "recipe_toml": "crates/sim-lib-discrete/recipes/01-basics/matrix-runtime/recipe.toml",
+          "title": "Matrix runtime descriptor"
+        }
+      ],
+      "summary": "Runtime-facing discrete matrix, graph, and transform descriptors.",
+      "title": "Discrete"
+    },
+    {
+      "book": "discrete-algebra",
+      "book_toml": "crates/sim-lib-discrete-algebra/recipes/book.toml",
+      "card_id": "cookbook/discrete-algebra",
+      "group": "workspace",
+      "package": "sim-lib-discrete-algebra",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "discrete-algebra/01-basics/semiring-matrix",
+          "codec": "lisp",
+          "id": "semiring-matrix",
+          "package": "sim-lib-discrete-algebra",
+          "recipe_toml": "crates/sim-lib-discrete-algebra/recipes/01-basics/semiring-matrix/recipe.toml",
+          "title": "Semiring matrix descriptor"
+        }
+      ],
+      "summary": "Small semiring and matrix-view descriptors.",
+      "title": "Discrete Algebra"
+    },
+    {
+      "book": "discrete-comb",
+      "book_toml": "crates/sim-lib-discrete-comb/recipes/book.toml",
+      "card_id": "cookbook/discrete-comb",
+      "group": "workspace",
+      "package": "sim-lib-discrete-comb",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "discrete-comb/01-basics/rankable-values",
+          "codec": "lisp",
+          "id": "rankable-values",
+          "package": "sim-lib-discrete-comb",
+          "recipe_toml": "crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/recipe.toml",
+          "title": "Rankable combinatorial values"
+        }
+      ],
+      "summary": "Combination and permutation descriptors.",
+      "title": "Discrete Combinatorics"
+    },
+    {
+      "book": "discrete-graph",
+      "book_toml": "crates/sim-lib-discrete-graph/recipes/book.toml",
+      "card_id": "cookbook/discrete-graph",
+      "group": "workspace",
+      "package": "sim-lib-discrete-graph",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "discrete-graph/01-basics/tiny-graph",
+          "codec": "lisp",
+          "id": "tiny-graph",
+          "package": "sim-lib-discrete-graph",
+          "recipe_toml": "crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/recipe.toml",
+          "title": "Tiny graph descriptor"
+        }
+      ],
+      "summary": "Graph, edge, traversal, and certificate descriptors.",
+      "title": "Discrete Graph"
+    },
+    {
+      "book": "discrete-rank",
+      "book_toml": "crates/sim-lib-discrete-rank/recipes/book.toml",
+      "card_id": "cookbook/discrete-rank",
+      "group": "workspace",
+      "package": "sim-lib-discrete-rank",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "discrete-rank/01-basics/combination-space",
+          "codec": "lisp",
+          "id": "combination-space",
+          "package": "sim-lib-discrete-rank",
+          "recipe_toml": "crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/recipe.toml",
+          "title": "Combination rank space"
+        }
+      ],
+      "summary": "Rank-space descriptors for discrete objects.",
+      "title": "Discrete Rank"
+    },
+    {
+      "book": "discrete-spectral",
+      "book_toml": "crates/sim-lib-discrete-spectral/recipes/book.toml",
+      "card_id": "cookbook/discrete-spectral",
+      "group": "workspace",
+      "package": "sim-lib-discrete-spectral",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "discrete-spectral/01-basics/fwht-signal",
+          "codec": "lisp",
+          "id": "fwht-signal",
+          "package": "sim-lib-discrete-spectral",
+          "recipe_toml": "crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/recipe.toml",
+          "title": "FWHT signal descriptor"
+        }
+      ],
+      "summary": "FWHT, Walsh signature, and spectral descriptor examples.",
+      "title": "Discrete Spectral"
+    }
   ]
 }

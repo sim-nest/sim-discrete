@@ -17,6 +17,28 @@ pub enum AlgebraError {
     /// An explicit size or iteration limit was exceeded.
     #[error("limit exceeded: {0}")]
     LimitExceeded(String),
+    /// A matrix dimension product overflowed `usize`.
+    #[error("matrix dimensions overflow: {rows}x{cols}")]
+    DimensionOverflow {
+        /// The requested row count.
+        rows: usize,
+        /// The requested column count.
+        cols: usize,
+    },
+    /// A public matrix value violated `data.len() == rows * cols`.
+    #[error(
+        "matrix invariant violation: {rows}x{cols} requires {expected} entries, found {actual}"
+    )]
+    InvalidMatrix {
+        /// The declared row count.
+        rows: usize,
+        /// The declared column count.
+        cols: usize,
+        /// The expected row-major entry count.
+        expected: usize,
+        /// The actual row-major entry count.
+        actual: usize,
+    },
     /// An index was out of bounds.
     #[error("index out of bounds: index {index}, len {len}")]
     IndexOutOfBounds {

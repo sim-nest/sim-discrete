@@ -5,14 +5,12 @@
 //! self-contained string codecs so the forms have a single, tested definition;
 //! the live kernel read-construct registration consumes the same grammar.
 
+// conformance: discrete algebra values round-trip through domain forms.
+
 #[path = "forms_extra.rs"]
 mod forms_extra;
 
-use std::sync::Arc;
-
-use sim_citizen::{decode_version, value_from_expr};
 use sim_codec::{DomainFormError, DomainValue, parse_domain_form};
-use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy, Symbol};
 
 pub use forms_extra::*;
 
@@ -66,17 +64,11 @@ pub(crate) fn parse_form(s: &str) -> Result<(String, Vec<Token>), FormError> {
 
 pub(crate) fn expect_version(tokens: &[Token]) -> Result<(), FormError> {
     match tokens.first() {
-        Some(Token::Word(v)) => {
-            let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
-            let version = value_from_expr(&mut cx, &Expr::Symbol(Symbol::new(v.clone())))
-                .map_err(|err| FormError::BadToken(err.to_string()))?;
-            decode_version(&mut cx, version, 1, Symbol::new("discrete/form")).map_err(|_| {
-                FormError::BadVersion {
-                    expected: "v1".to_string(),
-                    found: v.clone(),
-                }
-            })
-        }
+        Some(Token::Word(v)) if v == "v1" => Ok(()),
+        Some(Token::Word(v)) => Err(FormError::BadVersion {
+            expected: "v1".to_string(),
+            found: v.clone(),
+        }),
         _ => Err(FormError::BadArity("missing version token".to_string())),
     }
 }
@@ -206,9 +198,13 @@ fn int_from_domain_value(value: &DomainValue) -> Result<i64, FormError> {
     }
 }
 
+pub(crate) fn non_negative_usize(value: i64, field: &str) -> Result<usize, FormError> {
+    usize::try_from(value).map_err(|_| FormError::BadToken(format!("{field}={value}")))
+}
+
 fn list_to_usize(list: &[i64]) -> Result<Vec<usize>, FormError> {
     list.iter()
-        .map(|&v| usize::try_from(v).map_err(|_| FormError::BadToken(v.to_string())))
+        .map(|&v| non_negative_usize(v, "list item"))
         .collect()
 }
 
@@ -241,9 +237,11 @@ pub fn decode_combination(s: &str) -> Result<(usize, usize, Vec<usize>), FormErr
     }
     expect_version(&tokens)?;
     match &tokens[1..] {
-        [Token::Int(n), Token::Int(k), Token::List(values)] => {
-            Ok((*n as usize, *k as usize, list_to_usize(values)?))
-        }
+        [Token::Int(n), Token::Int(k), Token::List(values)] => Ok((
+            non_negative_usize(*n, "n")?,
+            non_negative_usize(*k, "k")?,
+            list_to_usize(values)?,
+        )),
         _ => Err(FormError::BadArity("expected v1 n k [values]".to_string())),
     }
 }
@@ -400,10 +398,26 @@ mod tests {
     }
 
     #[test]
+    fn negative_combination_dimensions_rejected() {
+        assert!(matches!(
+            decode_combination("#(discrete/combination v1 -1 1 [0])"),
+            Err(FormError::BadToken(_))
+        ));
+        assert!(matches!(
+            decode_combination("#(discrete/combination v1 3 -1 [0])"),
+            Err(FormError::BadToken(_))
+        ));
+    }
+
+    #[test]
     fn bad_version_rejected() {
         assert!(matches!(
             decode_permutation("#(discrete/permutation v2 [0 1])"),
             Err(FormError::BadVersion { .. })
+        ));
+        assert!(matches!(
+            decode_permutation("#(discrete/permutation 1 [0 1])"),
+            Err(FormError::BadArity(_))
         ));
     }
 

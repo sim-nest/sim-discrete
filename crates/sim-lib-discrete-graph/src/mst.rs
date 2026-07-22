@@ -10,11 +10,37 @@ use crate::error::GraphError;
 use crate::graph::Graph;
 use crate::unionfind::UnionFind;
 use core::cmp::Reverse;
-use core::ops::Add;
 use std::collections::BinaryHeap;
 
 /// Prim heap key: `(weight, min endpoint, max endpoint, edge id, to-node)`.
 type PrimHeap<W> = BinaryHeap<Reverse<(W, usize, usize, usize, usize)>>;
+
+/// Integer weights that can report overflow while summing MST totals.
+pub trait MstWeight: Ord + Clone + Default {
+    /// Returns `self + rhs`, or `None` when the sum overflows.
+    fn checked_add(&self, rhs: &Self) -> Option<Self>;
+}
+
+macro_rules! impl_mst_weight {
+    ($($ty:ty),* $(,)?) => {
+        $(
+            impl MstWeight for $ty {
+                fn checked_add(&self, rhs: &Self) -> Option<Self> {
+                    <$ty>::checked_add(*self, *rhs)
+                }
+            }
+        )*
+    };
+}
+
+impl_mst_weight!(
+    i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize,
+);
+
+pub(crate) fn checked_mst_add<W: MstWeight>(left: &W, right: &W) -> Result<W, GraphError> {
+    left.checked_add(right)
+        .ok_or_else(|| GraphError::WeightOverflow("minimum spanning tree total".to_string()))
+}
 
 fn require_undirected<N, W>(graph: &Graph<N, W>) -> Result<(), GraphError> {
     graph.validate()?;
@@ -29,7 +55,7 @@ fn require_undirected<N, W>(graph: &Graph<N, W>) -> Result<(), GraphError> {
 /// Kruskal's algorithm: sort edges, union-find to reject cycles.
 pub fn kruskals_mst<N, W>(graph: &Graph<N, W>) -> Result<SpanningTree<W>, GraphError>
 where
-    W: Ord + Clone + Default + Add<Output = W>,
+    W: MstWeight,
 {
     require_undirected(graph)?;
     let n = graph.node_count();
@@ -53,7 +79,7 @@ where
     for e in cand {
         if uf.union(e.source, e.target) {
             chosen.push(e.id);
-            total = total + e.weight.clone();
+            total = checked_mst_add(&total, &e.weight)?;
             if chosen.len() == n - 1 {
                 break;
             }
@@ -73,7 +99,7 @@ where
 /// deterministic tie-break as Kruskal.
 pub fn prims_mst<N, W>(graph: &Graph<N, W>) -> Result<SpanningTree<W>, GraphError>
 where
-    W: Ord + Clone + Default + Add<Output = W>,
+    W: MstWeight,
 {
     require_undirected(graph)?;
     let n = graph.node_count();
@@ -123,7 +149,7 @@ where
         }
         in_tree[to] = true;
         chosen.push(id);
-        total = total + w;
+        total = checked_mst_add(&total, &w)?;
         count += 1;
         push_incident(&mut heap, &in_tree, to);
     }
@@ -194,6 +220,19 @@ mod tests {
             kruskals_mst(&g),
             Err(GraphError::WrongGraphKind(_))
         ));
+    }
+
+    #[test]
+    fn mst_total_weight_overflow_is_rejected() {
+        let mut g: Graph<u8, u64> = Graph::with_nodes(vec![0, 1, 2], Directedness::Undirected);
+        g.add_edge(0, 1, u64::MAX).unwrap();
+        g.add_edge(1, 2, 1).unwrap();
+
+        assert!(matches!(
+            kruskals_mst(&g),
+            Err(GraphError::WeightOverflow(_))
+        ));
+        assert!(matches!(prims_mst(&g), Err(GraphError::WeightOverflow(_))));
     }
 
     #[test]

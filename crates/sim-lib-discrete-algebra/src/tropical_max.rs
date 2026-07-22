@@ -1,8 +1,11 @@
-//! The max-plus (tropical) semiring. Closure gives widest / critical paths.
+//! The bounded max-plus (tropical) semiring.
+//!
+//! Finite multiplication uses `i64::saturating_add`, so this is a bounded
+//! tropical algebra for closure and matrix work.
 
 use crate::semiring::Semiring;
 
-/// Max-plus tropical semiring: `add` is `max`, `mul` is saturating `+`.
+/// Bounded max-plus tropical semiring: `add` is `max`, `mul` is saturating `+`.
 ///
 /// `zero` is `NegInf`; `one` is `Fin(0)`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

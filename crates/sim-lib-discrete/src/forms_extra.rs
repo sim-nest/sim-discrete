@@ -1,4 +1,12 @@
-use super::{FormError, Token, expect_version, ints, list_to_usize, parse_form, usizes};
+#[cfg(feature = "rank")]
+use sim_lib_discrete_rank::{
+    BitVectorSpace, BoundedIntVectorSpace, CombinationSpace, FwhtSignalSpace, PermutationSpace,
+    SimpleGraphSpace, SubsetSpace,
+};
+
+use super::{
+    FormError, Token, expect_version, ints, list_to_usize, non_negative_usize, parse_form, usizes,
+};
 
 /// A list of `(left, right, weight)` triples shared by sparse-matrix entries
 /// (row, column, value) and graph edges (source, target, weight).
@@ -45,7 +53,7 @@ fn expect_head(head: &str, expected: &str) -> Result<(), FormError> {
 }
 
 fn expect_non_negative(value: i64, field: &str) -> Result<usize, FormError> {
-    usize::try_from(value).map_err(|_| FormError::BadToken(format!("{field}={value}")))
+    non_negative_usize(value, field)
 }
 
 /// `#(discrete/edge v1 id source target weight)`.
@@ -227,6 +235,103 @@ pub fn decode_rank_space(s: &str) -> Result<(String, Vec<i64>), FormError> {
     }
 }
 
+/// Validate rank-space parameters against the shared descriptor limit policy.
+#[cfg(feature = "rank")]
+pub fn validate_rank_space_limits(kind: &str, parameters: &[i64]) -> Result<(), FormError> {
+    match kind {
+        "bit-vector" => {
+            let [width] = as_usize_array::<1>(parameters, kind)?;
+            BitVectorSpace::try_new(width).map_err(rank_limit_error)?;
+        }
+        "subset" => {
+            let [n] = as_usize_array::<1>(parameters, kind)?;
+            SubsetSpace::try_new(n).map_err(rank_limit_error)?;
+        }
+        "combination" => {
+            let [n, k] = as_usize_array::<2>(parameters, kind)?;
+            CombinationSpace::try_new(n, k).map_err(rank_limit_error)?;
+        }
+        "permutation" => {
+            let [n] = as_usize_array::<1>(parameters, kind)?;
+            PermutationSpace::try_new(n).map_err(rank_limit_error)?;
+        }
+        "bounded-int-vector" => {
+            BoundedIntVectorSpace::try_new(as_u64_vec(parameters)?).map_err(rank_limit_error)?;
+        }
+        "simple-graph" => {
+            let [n] = as_usize_array::<1>(parameters, kind)?;
+            SimpleGraphSpace::try_new(n).map_err(rank_limit_error)?;
+        }
+        "fwht-signal" => {
+            let [len, alphabet] = as_u64_array::<2>(parameters, kind)?;
+            let len = usize::try_from(len)
+                .map_err(|_| FormError::BadToken(format!("fwht-signal len={len}")))?;
+            FwhtSignalSpace::try_new(len, alphabet).map_err(rank_limit_error)?;
+        }
+        _ => {
+            return Err(FormError::BadToken(format!(
+                "unknown discrete rank-space kind {kind}"
+            )));
+        }
+    }
+    Ok(())
+}
+
+#[cfg(feature = "rank")]
+fn as_usize_array<const N: usize>(parameters: &[i64], kind: &str) -> Result<[usize; N], FormError> {
+    if parameters.len() != N {
+        return Err(FormError::BadArity(format!(
+            "rank-space {kind} expects {N} parameter(s), got {}",
+            parameters.len()
+        )));
+    }
+    let values = parameters
+        .iter()
+        .enumerate()
+        .map(|(index, value)| non_negative_usize(*value, &format!("parameter {index}")))
+        .collect::<Result<Vec<_>, _>>()?;
+    values.try_into().map_err(|_| {
+        FormError::BadArity(format!(
+            "rank-space {kind} expects {N} parameter(s), got {}",
+            parameters.len()
+        ))
+    })
+}
+
+#[cfg(feature = "rank")]
+fn as_u64_array<const N: usize>(parameters: &[i64], kind: &str) -> Result<[u64; N], FormError> {
+    if parameters.len() != N {
+        return Err(FormError::BadArity(format!(
+            "rank-space {kind} expects {N} parameter(s), got {}",
+            parameters.len()
+        )));
+    }
+    let values = as_u64_vec(parameters)?;
+    values.try_into().map_err(|_| {
+        FormError::BadArity(format!(
+            "rank-space {kind} expects {N} parameter(s), got {}",
+            parameters.len()
+        ))
+    })
+}
+
+#[cfg(feature = "rank")]
+fn as_u64_vec(parameters: &[i64]) -> Result<Vec<u64>, FormError> {
+    parameters
+        .iter()
+        .enumerate()
+        .map(|(index, value)| {
+            u64::try_from(*value)
+                .map_err(|_| FormError::BadToken(format!("parameter {index}={value}")))
+        })
+        .collect()
+}
+
+#[cfg(feature = "rank")]
+fn rank_limit_error(error: sim_lib_discrete_rank::RankAdapterError) -> FormError {
+    FormError::BadToken(error.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -269,6 +374,28 @@ mod tests {
         ));
         assert!(matches!(
             decode_graph("#(discrete/graph v1 undirected 2 [0 2 1])"),
+            Err(FormError::BadToken(_))
+        ));
+    }
+
+    #[cfg(feature = "rank")]
+    #[test]
+    fn rank_space_limits_are_rejected_before_canonicalization() {
+        let max_graph = encode_rank_space("simple-graph", &[16]);
+        let (_, params) = decode_rank_space(&max_graph).unwrap();
+        validate_rank_space_limits("simple-graph", &params).unwrap();
+
+        let too_large_graph = encode_rank_space("simple-graph", &[17]);
+        let (_, params) = decode_rank_space(&too_large_graph).unwrap();
+        assert!(matches!(
+            validate_rank_space_limits("simple-graph", &params),
+            Err(FormError::BadToken(_))
+        ));
+
+        let huge_vector = encode_rank_space("bounded-int-vector", &[2; 128]);
+        let (_, params) = decode_rank_space(&huge_vector).unwrap();
+        assert!(matches!(
+            validate_rank_space_limits("bounded-int-vector", &params),
             Err(FormError::BadToken(_))
         ));
     }

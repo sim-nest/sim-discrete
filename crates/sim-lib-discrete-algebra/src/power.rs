@@ -12,6 +12,7 @@ impl<S: Semiring> Matrix<S> {
     /// for non-square input and [`AlgebraError::LimitExceeded`] when the
     /// dimension exceeds `limits.max_dim`.
     pub fn power(&self, k: usize, limits: AlgebraLimits) -> Result<Self, AlgebraError> {
+        self.validate()?;
         if !self.is_square() {
             return Err(AlgebraError::ShapeMismatch(format!(
                 "power requires a square matrix, got {}x{}",
@@ -25,7 +26,7 @@ impl<S: Semiring> Matrix<S> {
             )));
         }
         let n = self.rows;
-        let mut result = Matrix::identity(n);
+        let mut result = Matrix::try_identity_with_limits(n, limits)?;
         let mut base = self.clone();
         let mut e = k;
         while e > 0 {

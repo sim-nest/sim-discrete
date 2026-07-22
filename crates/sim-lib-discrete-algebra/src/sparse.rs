@@ -41,27 +41,66 @@ impl<S: Semiring> SparseMatrix<S> {
         }
     }
 
+    /// Checked empty `rows x cols` sparse matrix.
+    pub fn try_new(rows: usize, cols: usize) -> Result<Self, AlgebraError> {
+        let m = SparseMatrix {
+            rows,
+            cols,
+            entries: Vec::new(),
+        };
+        m.validate()?;
+        Ok(m)
+    }
+
+    /// Number of sparse matrix rows.
+    pub fn row_count(&self) -> usize {
+        self.rows
+    }
+
+    /// Number of sparse matrix columns.
+    pub fn col_count(&self) -> usize {
+        self.cols
+    }
+
+    /// Read-only sparse entries.
+    pub fn entries(&self) -> &[SparseEntry<S>] {
+        &self.entries
+    }
+
     /// Build from entries, rejecting any whose coordinates are out of range.
     pub fn from_entries(
         rows: usize,
         cols: usize,
         entries: Vec<SparseEntry<S>>,
     ) -> Result<Self, AlgebraError> {
-        for e in &entries {
-            if e.row >= rows || e.col >= cols {
-                return Err(AlgebraError::IndexOutOfBounds {
-                    index: e.row.saturating_mul(cols).saturating_add(e.col),
-                    len: rows.saturating_mul(cols),
-                });
-            }
-        }
         let mut m = SparseMatrix {
             rows,
             cols,
             entries,
         };
+        m.validate()?;
         m.canonicalize();
         Ok(m)
+    }
+
+    /// Validate public sparse dimensions and entry coordinates.
+    pub fn validate(&self) -> Result<(), AlgebraError> {
+        let len = self
+            .rows
+            .checked_mul(self.cols)
+            .ok_or(AlgebraError::DimensionOverflow {
+                rows: self.rows,
+                cols: self.cols,
+            })?;
+        for e in &self.entries {
+            if e.row >= self.rows || e.col >= self.cols {
+                return Err(AlgebraError::IndexOutOfBounds {
+                    index: e.row.saturating_mul(self.cols).saturating_add(e.col),
+                    len,
+                });
+            }
+        }
+        Ok(())
     }
 
     /// Sort entries by `(row, col)`, merge duplicates by semiring `add`, and
@@ -82,21 +121,23 @@ impl<S: Semiring> SparseMatrix<S> {
     }
 
     /// Densify, filling absent positions with the semiring `zero`.
-    pub fn to_dense(&self) -> Matrix<S> {
-        let mut m = Matrix::new(self.rows, self.cols);
+    pub fn to_dense(&self) -> Result<Matrix<S>, AlgebraError> {
+        self.validate()?;
+        let mut m = Matrix::try_new(self.rows, self.cols)?;
         for e in &self.entries {
-            m.data[e.row * self.cols + e.col] = e.value.clone();
+            m.set(e.row, e.col, e.value.clone())?;
         }
-        m
+        Ok(m)
     }
 
     /// Build a canonical sparse matrix from a dense one, keeping non-`zero`
     /// entries only.
-    pub fn from_dense_nonzero(dense: &Matrix<S>) -> Self {
+    pub fn from_dense_nonzero(dense: &Matrix<S>) -> Result<Self, AlgebraError> {
+        dense.validate()?;
         let mut entries = Vec::new();
         for r in 0..dense.rows {
             for c in 0..dense.cols {
-                let v = &dense.data[r * dense.cols + c];
+                let v = dense.get(r, c)?;
                 if !v.is_zero() {
                     entries.push(SparseEntry {
                         row: r,
@@ -106,11 +147,11 @@ impl<S: Semiring> SparseMatrix<S> {
                 }
             }
         }
-        SparseMatrix {
+        Ok(SparseMatrix {
             rows: dense.rows,
             cols: dense.cols,
             entries,
-        }
+        })
     }
 }
 
@@ -150,8 +191,34 @@ mod tests {
     #[test]
     fn dense_sparse_round_trip() {
         let m = SparseMatrix::from_entries(2, 2, vec![e(0, 1, 7), e(1, 0, 9)]).unwrap();
-        let dense = m.to_dense();
-        let back = SparseMatrix::from_dense_nonzero(&dense);
+        let dense = m.to_dense().unwrap();
+        let back = SparseMatrix::from_dense_nonzero(&dense).unwrap();
         assert_eq!(back, m);
+    }
+
+    #[test]
+    fn invalid_public_sparse_matrix_fails_before_densifying() {
+        let bad = SparseMatrix {
+            rows: 1,
+            cols: 1,
+            entries: vec![e(1, 0, 4)],
+        };
+
+        assert!(matches!(
+            bad.validate(),
+            Err(AlgebraError::IndexOutOfBounds { .. })
+        ));
+        assert!(matches!(
+            bad.to_dense(),
+            Err(AlgebraError::IndexOutOfBounds { .. })
+        ));
+    }
+
+    #[test]
+    fn checked_sparse_constructor_rejects_dimension_overflow() {
+        assert!(matches!(
+            SparseMatrix::<Counting>::try_new(usize::MAX, 2),
+            Err(AlgebraError::DimensionOverflow { .. })
+        ));
     }
 }

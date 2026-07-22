@@ -1,1 +1,1 @@
-(quote (#(discrete/Matrix v1 "#(discrete/matrix v1 int 2 2 [1 0 0 1])") semiring identity matmul))
+(discrete/algebra-semiring-matrix-demo)

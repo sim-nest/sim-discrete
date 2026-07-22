@@ -11,6 +11,7 @@
 //! Boundary: depends on `sim-lib-discrete-algebra`; never on `sim-lib-music-*`.
 
 pub mod convolution;
+pub mod cookbook;
 pub mod error;
 pub mod hadamard_view;
 pub mod signal;
@@ -19,6 +20,7 @@ pub mod subset;
 pub mod transform;
 
 pub use convolution::{xor_convolution_f64, xor_convolution_i64};
+pub use cookbook::{FwhtSignalDemo, fwht_signal_demo};
 pub use error::SpectralError;
 pub use hadamard_view::HadamardView;
 pub use signal::{Normalization, WalshBasis, WalshSignal};

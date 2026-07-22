@@ -1,12 +1,18 @@
 //! Graph <-> matrix conversions: adjacency (boolean, min-plus, sparse),
 //! incidence, and Laplacian, with explicit multiedge policies and a mapping
 //! witness.
+//!
+//! Bridge matrices omit graph self-loops. This keeps adjacency, incidence, and
+//! Laplacian exports aligned with the simple-graph matrix contract while
+//! preserving the original graph value unchanged.
 
 use crate::edge::Directedness;
 use crate::error::GraphError;
 use crate::graph::Graph;
 use crate::intring::IntRing;
-use sim_lib_discrete_algebra::{BoolRing, Matrix, MinPlus, SparseEntry, SparseMatrix};
+use sim_lib_discrete_algebra::{
+    AlgebraLimits, BoolRing, Matrix, MinPlus, SparseEntry, SparseMatrix,
+};
 use std::collections::HashMap;
 
 /// Resolved canonical-pair values plus the per-edge `(row, col)` mapping.
@@ -73,6 +79,16 @@ fn canonical<N, W>(graph: &Graph<N, W>, s: usize, t: usize) -> (usize, usize) {
     }
 }
 
+fn checked_sum_weights(group: &[(usize, i64)]) -> Result<i64, GraphError> {
+    let mut total = 0_i64;
+    for (_, weight) in group {
+        total = total
+            .checked_add(*weight)
+            .ok_or_else(|| GraphError::WeightOverflow("parallel edge sum".to_string()))?;
+    }
+    Ok(total)
+}
+
 /// Resolve parallel edges per the policy. Returns the resolved value per
 /// canonical pair and the per-edge entry mapping.
 fn resolve<N>(graph: &Graph<N, i64>, policy: MultiedgePolicy) -> ResolveResult {
@@ -98,8 +114,9 @@ fn resolve<N>(graph: &Graph<N, i64>, policy: MultiedgePolicy) -> ResolveResult {
             MultiedgePolicy::ErrorOnMultiedge | MultiedgePolicy::KeepFirst => group[0].1,
             MultiedgePolicy::KeepLast => group[group.len() - 1].1,
             MultiedgePolicy::MinWeight => group.iter().map(|(_, w)| *w).min().unwrap(),
-            MultiedgePolicy::SumWeight => group.iter().map(|(_, w)| *w).sum(),
-            MultiedgePolicy::CountEdges => group.len() as i64,
+            MultiedgePolicy::SumWeight => checked_sum_weights(&group)?,
+            MultiedgePolicy::CountEdges => i64::try_from(group.len())
+                .map_err(|_| GraphError::WeightOverflow("parallel edge count".to_string()))?,
         };
         resolved.insert(key, value);
     }
@@ -121,13 +138,14 @@ fn directed_cells<N>(
     cells
 }
 
-/// Boolean adjacency: `true` where at least one edge connects the pair.
+/// Boolean adjacency: `true` where at least one non-self-loop edge connects the
+/// pair.
 pub fn graph_to_bool_adjacency<N, W>(
     graph: &Graph<N, W>,
 ) -> Result<(Matrix<BoolRing>, GraphMatrixMap), GraphError> {
     graph.validate()?;
     let n = graph.node_count();
-    let mut m = Matrix::filled(n, n, BoolRing(false));
+    let mut m = Matrix::try_filled_with_limits(n, n, BoolRing(false), AlgebraLimits::default())?;
     let undirected = !graph.is_directed();
     let mut map = identity_map(n, graph.edge_count(), "boolean");
     for e in &graph.edges {
@@ -143,7 +161,8 @@ pub fn graph_to_bool_adjacency<N, W>(
     Ok((m, map))
 }
 
-/// Min-plus weighted adjacency (`Inf` = no edge), applying a multiedge policy.
+/// Min-plus weighted adjacency (`Inf` = no non-self-loop edge), applying a
+/// multiedge policy.
 pub fn graph_to_minplus_adjacency<N>(
     graph: &Graph<N, i64>,
     policy: MultiedgePolicy,
@@ -151,7 +170,7 @@ pub fn graph_to_minplus_adjacency<N>(
     graph.validate()?;
     let n = graph.node_count();
     let (resolved, edge_to_entry) = resolve(graph, policy)?;
-    let mut m = Matrix::filled(n, n, MinPlus::Inf);
+    let mut m = Matrix::try_filled_with_limits(n, n, MinPlus::Inf, AlgebraLimits::default())?;
     for ((r, c), v) in directed_cells(graph, &resolved) {
         m.data[r * n + c] = MinPlus::Fin(v);
     }
@@ -160,7 +179,8 @@ pub fn graph_to_minplus_adjacency<N>(
     Ok((m, map))
 }
 
-/// Sparse min-plus weighted adjacency, applying a multiedge policy.
+/// Sparse min-plus weighted adjacency, applying a multiedge policy and omitting
+/// self-loops.
 pub fn graph_to_sparse_adjacency<N>(
     graph: &Graph<N, i64>,
     policy: MultiedgePolicy,
@@ -184,8 +204,8 @@ pub fn graph_to_sparse_adjacency<N>(
 }
 
 /// Incidence matrix as a sparse `IntRing` matrix. Directed: `-1` at the source,
-/// `+1` at the target. Undirected: `+1` at both endpoints. One column per edge
-/// (self-loops omitted).
+/// `+1` at the target. Undirected: `+1` at both endpoints. One column per
+/// non-self-loop edge.
 pub fn graph_to_incidence<N, W>(graph: &Graph<N, W>) -> Result<SparseMatrix<IntRing>, GraphError> {
     graph.validate()?;
     let n = graph.node_count();
@@ -229,7 +249,7 @@ pub fn graph_to_incidence<N, W>(graph: &Graph<N, W>) -> Result<SparseMatrix<IntR
 pub fn graph_to_laplacian<N, W>(graph: &Graph<N, W>) -> Result<Matrix<IntRing>, GraphError> {
     graph.validate()?;
     let n = graph.node_count();
-    let mut m = Matrix::filled(n, n, IntRing(0));
+    let mut m = Matrix::try_filled_with_limits(n, n, IntRing(0), AlgebraLimits::default())?;
     let undirected = !graph.is_directed();
     for e in &graph.edges {
         if e.is_self_loop() {
@@ -251,6 +271,7 @@ pub fn minplus_adjacency_to_graph(
     matrix: &Matrix<MinPlus>,
     directedness: Directedness,
 ) -> Result<Graph<usize, i64>, GraphError> {
+    matrix.validate()?;
     if !matrix.is_square() {
         return Err(GraphError::Unsupported(
             "adjacency must be square".to_string(),
@@ -322,6 +343,68 @@ mod tests {
         assert_eq!(cell(MultiedgePolicy::KeepLast), MinPlus::Fin(10));
         assert_eq!(cell(MultiedgePolicy::CountEdges), MinPlus::Fin(2));
         assert!(graph_to_minplus_adjacency(&g, MultiedgePolicy::ErrorOnMultiedge).is_err());
+    }
+
+    #[test]
+    fn malformed_edge_ids_fail_before_matrix_indexing() {
+        let g = Graph {
+            nodes: vec![0, 1],
+            edges: vec![crate::edge::Edge {
+                id: 3,
+                source: 0,
+                target: 1,
+                weight: 7,
+            }],
+            directedness: Directedness::Directed,
+        };
+
+        assert!(matches!(
+            graph_to_bool_adjacency(&g),
+            Err(GraphError::InvalidEdgeId {
+                index: 0,
+                id: 3,
+                len: 1,
+            })
+        ));
+    }
+
+    #[test]
+    fn sum_weight_policy_rejects_overflow() {
+        let mut g: Graph<usize, i64> = Graph::with_nodes(vec![0, 1], Directedness::Directed);
+        g.add_edge(0, 1, i64::MAX).unwrap();
+        g.add_edge(0, 1, 1).unwrap();
+
+        assert!(matches!(
+            graph_to_minplus_adjacency(&g, MultiedgePolicy::SumWeight),
+            Err(GraphError::WeightOverflow(_))
+        ));
+    }
+
+    #[test]
+    fn self_loops_are_omitted_from_bridge_matrices() {
+        let mut g: Graph<usize, i64> = Graph::with_nodes(vec![0, 1], Directedness::Undirected);
+        g.add_edge(0, 0, 9).unwrap();
+        g.add_edge(0, 1, 5).unwrap();
+
+        let (bool_adj, bool_map) = graph_to_bool_adjacency(&g).unwrap();
+        assert_eq!(bool_adj.data[0], BoolRing(false));
+        assert_eq!(bool_adj.data[1], BoolRing(true));
+        assert_eq!(bool_adj.data[2], BoolRing(true));
+        assert_eq!(bool_map.edge_to_entry[0], None);
+        assert_eq!(bool_map.edge_to_entry[1], Some((0, 1)));
+
+        let (min_adj, min_map) =
+            graph_to_minplus_adjacency(&g, MultiedgePolicy::MinWeight).unwrap();
+        assert_eq!(min_adj.data[0], MinPlus::Inf);
+        assert_eq!(min_adj.data[1], MinPlus::Fin(5));
+        assert_eq!(min_adj.data[2], MinPlus::Fin(5));
+        assert_eq!(min_map.edge_to_entry[0], None);
+
+        let lap = graph_to_laplacian(&g).unwrap();
+        assert_eq!(lap.data[0].0, 1);
+        assert_eq!(lap.data[1].0, -1);
+        assert_eq!(lap.data[2].0, -1);
+        assert_eq!(lap.data[3].0, 1);
     }
 
     #[test]

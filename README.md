@@ -108,15 +108,22 @@ The public API is documentation-gated: each crate's `lib.rs` denies
 `missing_docs`, so every public item, field, and variant must be documented for
 the crate to build.
 
-Each crate's runnable examples are its embedded `recipes/` tree plus the rustdoc
-`# Examples` doctests; there are no stub recipe directories.
+Each crate embeds cookbook recipe records. The descriptor recipes document the
+SIM forms a reader can inspect, and the `binomial-count` recipe carries a live
+expectation that evaluates through the sandbox. Rustdoc `# Examples` remain the
+compiled examples for direct Rust use.
 
 ## Validation
 
-These commands run in the constellation workspace; only `sim-kernel` builds from a lone clone today (see `DEVELOPING.md` in `sim-sdk`). A single-repo build lands with the first crates.io publish.
+The standalone repository gate is the same feature-aware surface used by CI and the PR checklist:
 
 ```bash
-cargo fmt --check && cargo test --workspace && cargo clippy --workspace -- -D warnings && cargo doc --workspace --no-deps
+cargo fmt --all --check
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+cargo clippy --workspace --all-features --all-targets -- -D warnings
+cargo test --workspace --all-features
 cargo run -p xtask -- simdoc --check
 ```
 

@@ -13,17 +13,20 @@
 
 pub mod cards;
 pub mod combinatorial;
+pub mod cookbook;
 pub mod descriptor;
 pub mod error;
 pub mod grade;
 pub mod graph_space;
 pub mod lattice;
+pub mod limits;
 pub mod metric;
 pub mod signal_space;
 pub mod tree_metric;
 
 pub use cards::discrete_rank_cards;
 pub use combinatorial::{BoundedIntVectorSpace, CombinationSpace, PermutationSpace};
+pub use cookbook::{CombinationSpaceDemo, combination_space_demo};
 pub use descriptor::{CardSpec, SpaceDescriptor};
 pub use error::RankAdapterError;
 pub use grade::{
@@ -31,6 +34,7 @@ pub use grade::{
 };
 pub use graph_space::SimpleGraphSpace;
 pub use lattice::{BitVectorSpace, SubsetSpace};
+pub use limits::DiscreteRankLimits;
 pub use signal_space::FwhtSignalSpace;
 pub use tree_metric::spanning_tree_swap_distance;
 

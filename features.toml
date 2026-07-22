@@ -1,0 +1,65 @@
+schema = "sim.features"
+
+[enforcement.audience]
+code = "strict"
+framework = "strict"
+
+[enforcement.specimen]
+user = "strict"
+framework = "strict"
+code = "advisory"
+
+[enforcement.route]
+major_entrypoints = "advisory"
+frameworks = "advisory"
+
+[[feature]]
+id = "feature/sim-discrete/generated-docs"
+title = "Repository documentation surface"
+summary = "Publish generated package, card, rustdoc, and index facts for the discrete algebra crates."
+owner = "crate/xtask"
+audiences = ["code"]
+guidance = "Use this row when checking the generated documentation and index lane for discrete algebra."
+claims_anchors = [
+  "anchor/cli/xtask",
+  "anchor/crate/xtask",
+  "anchor/doc/generated/card-index",
+  "anchor/doc/generated/feature-map",
+  "anchor/doc/generated/provenance",
+  "anchor/doc/generated/repo-contract",
+  "anchor/doc/generated/rustdoc-index",
+  "anchor/doc/generated/sim-index-fragment",
+  "anchor/repo/sim-discrete",
+]
+claims_surfaces = [
+  "cli/xtask",
+  "docs/sim-discrete/generated",
+]
+
+[[feature]]
+id = "feature/sim-discrete/discrete-algebra"
+title = "Discrete algebra domain"
+summary = "Provide algebra, graph, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack."
+owner = "crate/sim-lib-discrete"
+audiences = ["code", "framework"]
+guidance = "Use this row when selecting a reusable discrete mathematics representation or graph helper."
+claims_anchors = [
+  "anchor/crate/sim-lib-discrete",
+  "anchor/crate/sim-lib-discrete-algebra",
+  "anchor/crate/sim-lib-discrete-comb",
+  "anchor/crate/sim-lib-discrete-graph",
+  "anchor/crate/sim-lib-discrete-rank",
+  "anchor/crate/sim-lib-discrete-spectral",
+  "anchor/runtime-lib/sim-lib-discrete/discrete-lib",
+]
+claims_specimens = [
+  "spec-test/sim-discrete/crates/sim-lib-discrete/src/forms",
+]
+
+[[route]]
+id = "route/add-discrete-domain-helper"
+task = "Add a discrete domain helper"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-discrete/discrete-algebra", why = "The discrete row owns algebra, graph, ranking, and spectral helpers." },
+]

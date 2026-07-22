@@ -13,6 +13,7 @@ pub mod bridge;
 pub mod cards;
 pub mod certificate;
 pub mod connectivity;
+pub mod cookbook;
 pub mod edge;
 pub mod error;
 pub mod graph;
@@ -34,11 +35,12 @@ pub use certificate::{
 pub use connectivity::{
     connected_components, strongly_connected_components, weakly_connected_components,
 };
+pub use cookbook::{TinyGraphDemo, tiny_graph_demo};
 pub use edge::{Directedness, Edge};
 pub use error::GraphError;
 pub use graph::{Graph, Neighbor};
 pub use intring::IntRing;
-pub use mst::{kruskals_mst, prims_mst};
+pub use mst::{MstWeight, kruskals_mst, prims_mst};
 pub use path::{PathResult, all_pairs_shortest_paths, bellman_ford, dijkstra, reachability};
 pub use traversal::{Traversal, bfs, dfs};
 

@@ -2,10 +2,11 @@
 //!
 //! A semiring is a set with two operations, `add` (combine alternatives) and
 //! `mul` (chain in sequence), each with an identity (`zero` and `one`). One
-//! generic matrix-closure engine over a semiring derives many graph algorithms:
-//! boolean closure gives reachability, min-plus closure gives shortest paths,
-//! counting powers count walks. See the instance modules for the standard
-//! semirings.
+//! generic matrix-closure engine over a semiring derives algebraic closures:
+//! boolean closure gives reachability, bounded min-plus closure gives tropical
+//! path costs under its documented saturation contract, and counting powers
+//! count walks. Checked integer graph shortest paths live in the graph crate.
+//! See the instance modules for the standard semirings.
 
 /// A semiring: `(add, zero)` is a commutative monoid, `(mul, one)` is a monoid,
 /// `mul` distributes over `add`, and `zero` annihilates under `mul`.

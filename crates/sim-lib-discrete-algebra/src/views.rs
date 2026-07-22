@@ -49,7 +49,7 @@ impl IdentityView {
         limits: AlgebraLimits,
     ) -> Result<Matrix<S>, AlgebraError> {
         check_dim(self.n, limits)?;
-        Ok(Matrix::identity(self.n))
+        Matrix::try_identity_with_limits(self.n, limits)
     }
 }
 
@@ -76,9 +76,9 @@ impl<S: Semiring> DiagonalView<S> {
     pub fn materialize(&self, limits: AlgebraLimits) -> Result<Matrix<S>, AlgebraError> {
         let n = self.diag.len();
         check_dim(n, limits)?;
-        let mut m = Matrix::new(n, n);
+        let mut m = Matrix::try_new_with_limits(n, n, limits)?;
         for (i, d) in self.diag.iter().enumerate() {
-            m.data[i * n + i] = d.clone();
+            m.set(i, i, d.clone())?;
         }
         Ok(m)
     }
@@ -116,12 +116,12 @@ impl PermutationView {
     ) -> Result<Matrix<S>, AlgebraError> {
         let n = self.perm.len();
         check_dim(n, limits)?;
-        let mut m: Matrix<S> = Matrix::new(n, n);
+        let mut m: Matrix<S> = Matrix::try_new_with_limits(n, n, limits)?;
         for (i, &p) in self.perm.iter().enumerate() {
             if p >= n {
                 return Err(AlgebraError::IndexOutOfBounds { index: p, len: n });
             }
-            m.data[i * n + p] = S::one();
+            m.set(i, p, S::one())?;
         }
         Ok(m)
     }

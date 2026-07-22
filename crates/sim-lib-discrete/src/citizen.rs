@@ -238,13 +238,17 @@ fn canonical_edge(value: &str) -> Result<String> {
 
 fn canonical_combination(value: &str) -> Result<String> {
     let (n, k, values) = forms::decode_combination(value).map_err(form_error)?;
-    sim_lib_discrete_comb::combination_rank(&values, n).map_err(discrete_comb_error)?;
     if values.len() != k {
         return Err(Error::Eval(format!(
             "combination length {} != k {k}",
             values.len()
         )));
     }
+    if k > n {
+        return Err(Error::Eval(format!("combination k={k} exceeds n={n}")));
+    }
+    sim_lib_discrete_rank::CombinationSpace::try_new(n, k).map_err(discrete_rank_error)?;
+    sim_lib_discrete_comb::combination_rank(&values, n).map_err(discrete_comb_error)?;
     Ok(forms::encode_combination(n, k, &values))
 }
 
@@ -314,6 +318,7 @@ fn canonical_rank_space(value: &str, expected: &str, arity: Option<usize>) -> Re
             "rank-space parameters must be non-negative".to_owned(),
         ));
     }
+    forms::validate_rank_space_limits(&kind, &params).map_err(form_error)?;
     Ok(forms::encode_rank_space(&kind, &params))
 }
 
@@ -356,6 +361,14 @@ fn discrete_graph_error(error: sim_lib_discrete_graph::GraphError) -> Error {
     Error::domain_error(
         Symbol::new("discrete"),
         Symbol::qualified("discrete", "graph"),
+        error.to_string(),
+    )
+}
+
+fn discrete_rank_error(error: sim_lib_discrete_rank::RankAdapterError) -> Error {
+    Error::domain_error(
+        Symbol::new("discrete"),
+        Symbol::qualified("discrete", "rank"),
         error.to_string(),
     )
 }

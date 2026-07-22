@@ -1,5 +1,140 @@
 {
-  "schema": "sim.feature-map.v1",
-  "repo": "sim-discrete",
-  "packages": []
+  "generator": "xtask repo-contract v1",
+  "packages": [
+    {
+      "features": [
+        {
+          "edges": [
+            "dep:sim-lib-discrete-algebra"
+          ],
+          "name": "algebra",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-algebra"
+            }
+          ]
+        },
+        {
+          "edges": [
+            "rank",
+            "dep:sim-citizen",
+            "dep:sim-citizen-derive",
+            "dep:sim-value"
+          ],
+          "name": "citizen",
+          "workspace_edges": []
+        },
+        {
+          "edges": [
+            "dep:sim-lib-discrete-comb"
+          ],
+          "name": "comb",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-comb"
+            }
+          ]
+        },
+        {
+          "edges": [],
+          "name": "default",
+          "workspace_edges": []
+        },
+        {
+          "edges": [
+            "algebra",
+            "graph",
+            "comb",
+            "spectral"
+          ],
+          "name": "full",
+          "workspace_edges": []
+        },
+        {
+          "edges": [
+            "algebra",
+            "dep:sim-lib-discrete-graph"
+          ],
+          "name": "graph",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-graph"
+            }
+          ]
+        },
+        {
+          "edges": [
+            "algebra",
+            "graph",
+            "comb",
+            "spectral",
+            "dep:sim-lib-discrete-rank"
+          ],
+          "name": "rank",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-rank"
+            }
+          ]
+        },
+        {
+          "edges": [
+            "full",
+            "dep:sim-lib-core"
+          ],
+          "name": "runtime",
+          "workspace_edges": []
+        },
+        {
+          "edges": [
+            "algebra",
+            "dep:sim-lib-discrete-spectral"
+          ],
+          "name": "spectral",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-spectral"
+            }
+          ]
+        }
+      ],
+      "group": "workspace",
+      "package": "sim-lib-discrete"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-lib-discrete-algebra"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-lib-discrete-comb"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-lib-discrete-graph"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-lib-discrete-rank"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-lib-discrete-spectral"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "xtask"
+    }
+  ]
 }

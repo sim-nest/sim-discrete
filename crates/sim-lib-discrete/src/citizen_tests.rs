@@ -6,8 +6,10 @@ use sim_kernel::{
 use std::sync::Arc;
 
 use crate::{
-    CombinationSpaceDescriptor, FwhtSignalDescriptor, GraphDescriptor, MatrixDescriptor,
-    PermutationDescriptor, forms,
+    BitVectorSpaceDescriptor, BoundedIntVectorSpaceDescriptor, CombinationDescriptor,
+    CombinationSpaceDescriptor, FwhtSignalDescriptor, FwhtSignalSpaceDescriptor, GraphDescriptor,
+    MatrixDescriptor, PermutationDescriptor, PermutationSpaceDescriptor,
+    SimpleGraphSpaceDescriptor, SubsetSpaceDescriptor, forms,
 };
 
 #[test]
@@ -44,8 +46,91 @@ fn matrix_graph_fwht_and_rank_space_lisp_round_trip() {
 #[test]
 fn invalid_discrete_citizen_forms_fail_closed() {
     assert!(MatrixDescriptor::from_text("#(discrete/matrix v1 int 2 2 [1 2 3])").is_err());
+    assert!(CombinationDescriptor::from_text("#(discrete/combination v1 -1 1 [0])").is_err());
+    assert!(CombinationDescriptor::from_text("#(discrete/combination v1 3 -1 [0])").is_err());
+    assert!(CombinationDescriptor::from_text(&forms::encode_combination(3, 4, &[0])).is_err());
     assert!(
         CombinationSpaceDescriptor::from_text(&forms::encode_rank_space("permutation", &[4]))
+            .is_err()
+    );
+}
+
+#[test]
+fn rank_space_descriptor_limits_round_trip_and_reject_next_dimension() {
+    assert_descriptor_round_trip(
+        BitVectorSpaceDescriptor::from_text(&forms::encode_rank_space("bit-vector", &[127]))
+            .unwrap()
+            .as_text(),
+    );
+    assert!(
+        BitVectorSpaceDescriptor::from_text(&forms::encode_rank_space("bit-vector", &[128]))
+            .is_err()
+    );
+
+    assert_descriptor_round_trip(
+        SubsetSpaceDescriptor::from_text(&forms::encode_rank_space("subset", &[127]))
+            .unwrap()
+            .as_text(),
+    );
+    assert!(SubsetSpaceDescriptor::from_text(&forms::encode_rank_space("subset", &[128])).is_err());
+
+    assert_descriptor_round_trip(
+        CombinationSpaceDescriptor::from_text(&forms::encode_rank_space("combination", &[127, 63]))
+            .unwrap()
+            .as_text(),
+    );
+    assert!(
+        CombinationSpaceDescriptor::from_text(&forms::encode_rank_space("combination", &[128, 1]))
+            .is_err()
+    );
+    assert!(
+        CombinationSpaceDescriptor::from_text(&forms::encode_rank_space("combination", &[5, 6]))
+            .is_err()
+    );
+
+    assert_descriptor_round_trip(
+        PermutationSpaceDescriptor::from_text(&forms::encode_rank_space("permutation", &[127]))
+            .unwrap()
+            .as_text(),
+    );
+    assert!(
+        PermutationSpaceDescriptor::from_text(&forms::encode_rank_space("permutation", &[128]))
+            .is_err()
+    );
+
+    assert_descriptor_round_trip(
+        BoundedIntVectorSpaceDescriptor::from_text(&forms::encode_rank_space(
+            "bounded-int-vector",
+            &[2; 127],
+        ))
+        .unwrap()
+        .as_text(),
+    );
+    assert!(
+        BoundedIntVectorSpaceDescriptor::from_text(&forms::encode_rank_space(
+            "bounded-int-vector",
+            &[2; 128],
+        ))
+        .is_err()
+    );
+
+    assert_descriptor_round_trip(
+        SimpleGraphSpaceDescriptor::from_text(&forms::encode_rank_space("simple-graph", &[16]))
+            .unwrap()
+            .as_text(),
+    );
+    assert!(
+        SimpleGraphSpaceDescriptor::from_text(&forms::encode_rank_space("simple-graph", &[17]))
+            .is_err()
+    );
+
+    assert_descriptor_round_trip(
+        FwhtSignalSpaceDescriptor::from_text(&forms::encode_rank_space("fwht-signal", &[127, 2]))
+            .unwrap()
+            .as_text(),
+    );
+    assert!(
+        FwhtSignalSpaceDescriptor::from_text(&forms::encode_rank_space("fwht-signal", &[128, 2]))
             .is_err()
     );
 }
@@ -80,6 +165,12 @@ where
     )
     .unwrap();
     assert_eq!(decoded, expr);
+}
+
+fn assert_descriptor_round_trip(form: &str) {
+    let (kind, params) = forms::decode_rank_space(form).unwrap();
+    let encoded = forms::encode_rank_space(&kind, &params);
+    assert_eq!(encoded, form);
 }
 
 fn codec_cx() -> Cx {
