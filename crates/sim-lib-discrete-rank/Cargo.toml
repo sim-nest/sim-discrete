@@ -10,14 +10,14 @@ repository = "https://github.com/sim-nest/sim-discrete"
 homepage = "https://github.com/sim-nest/sim-discrete"
 
 [dependencies]
-num-bigint = "0.4"
+num-bigint = "0.5"
 sim-cookbook = { version = "0.1.0" }
 sim-lib-discrete-algebra = { version = "0.1.0", path = "../sim-lib-discrete-algebra" }
 sim-lib-discrete-comb = { version = "0.1.0", path = "../sim-lib-discrete-comb" }
 sim-lib-discrete-graph = { version = "0.1.0", path = "../sim-lib-discrete-graph" }
 sim-lib-discrete-spectral = { version = "0.1.0", path = "../sim-lib-discrete-spectral" }
 sim-lib-rank = { version = "0.1.0" }
-thiserror = "1"
+thiserror = "2"
 [build-dependencies]
 sim-cookbook = { version = "0.1.0" }
 
