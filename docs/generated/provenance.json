@@ -3,10 +3,10 @@
   "generated_by": "cargo run -p xtask -- simdoc",
   "generation_timestamp": "2026-07-15T01:30:10+02:00",
   "generator": "xtask repo-contract v1",
-  "git_commit": "9e8f17061aefdde47392ea0ba950ee227c3eccc1",
+  "git_commit": "e981955bd984a1e7ce40913fbac7bfd9aa64fc72",
   "repo": "sim-discrete",
   "schema": "sim.provenance.v1",
-  "source_commit": "9e8f17061aefdde47392ea0ba950ee227c3eccc1",
+  "source_commit": "e981955bd984a1e7ce40913fbac7bfd9aa64fc72",
   "source_remote": "https://github.com/sim-nest/sim-discrete",
   "validation_commands": [
     "cargo fmt --all --check",
@@ -19,9 +19,9 @@
     "cargo run -p xtask -- validation-matrix --check --repo .",
     "cargo run -p xtask -- crate-catalog --check --repo ."
   ],
-  "workspace_hash": "8c375d668c039fe5",
+  "workspace_hash": "fa0d5b0bfb4ddf94",
   "workspace_hash_algorithm": "fnv1a64",
-  "workspace_hash_input_count": 99,
+  "workspace_hash_input_count": 100,
   "workspace_hash_inputs": [
     "Cargo.toml",
     "crates/sim-lib-discrete/Cargo.toml",
@@ -121,6 +121,7 @@
     "crates/sim-lib-discrete-spectral/src/signature.rs",
     "crates/sim-lib-discrete-spectral/src/subset.rs",
     "crates/sim-lib-discrete-spectral/src/transform.rs",
+    "features.toml",
     "xtask/Cargo.toml"
   ]
 }
