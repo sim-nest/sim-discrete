@@ -5,6 +5,8 @@
 //! self-contained string codecs so the forms have a single, tested definition;
 //! the live kernel read-construct registration consumes the same grammar.
 
+// conformance: discrete algebra values round-trip through domain forms.
+
 #[path = "forms_extra.rs"]
 mod forms_extra;
 
