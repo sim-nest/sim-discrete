@@ -4,6 +4,9 @@
 {"kind":"recipe","path":"crates/sim-lib-discrete-algebra/recipes/01-basics/semiring-matrix/setup.siml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-algebra/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/01-basics/finite-enumeration/purpose.md"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/01-basics/finite-enumeration/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/01-basics/finite-enumeration/setup.siml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/purpose.md"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/setup.siml"}

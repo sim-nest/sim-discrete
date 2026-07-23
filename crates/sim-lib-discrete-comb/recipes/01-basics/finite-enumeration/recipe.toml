@@ -1,0 +1,8 @@
+id = "finite-enumeration"
+title = "Finite alphabet enumeration"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 20
+tags = ["discrete", "word", "mixed-radix", "cycle", "lazy-enumeration"]
+requires = ["discrete-comb", "codec/lisp"]

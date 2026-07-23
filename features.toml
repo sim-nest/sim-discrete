@@ -56,10 +56,45 @@ claims_specimens = [
   "spec-test/sim-discrete/crates/sim-lib-discrete/src/forms",
 ]
 
+[[feature]]
+id = "feature/sim-discrete/finite-enumeration"
+title = "Finite enumeration adapters"
+summary = "Enumerate fixed-alphabet words lazily, adapt words to mixed-radix digits, canonicalize cyclic patterns, and keep longest candidates."
+owner = "crate/sim-lib-discrete-comb"
+audiences = ["code", "framework"]
+guidance = "Use this row when a finite catalog needs exact counts, rank/unrank identities, lazy prefix enumeration, cyclic pattern representatives, or longest-only filtering."
+claims_anchors = [
+  "anchor/card/cookbook/discrete-comb",
+  "anchor/crate/sim-lib-discrete-comb",
+  "anchor/rustdoc/sim-lib-discrete-comb/canonical_cycles",
+  "anchor/rustdoc/sim-lib-discrete-comb/digits_to_word",
+  "anchor/rustdoc/sim-lib-discrete-comb/longest_only",
+  "anchor/rustdoc/sim-lib-discrete-comb/mixed-radix-words",
+  "anchor/rustdoc/sim-lib-discrete-comb/word",
+  "anchor/rustdoc/sim-lib-discrete-comb/word_count",
+  "anchor/rustdoc/sim-lib-discrete-comb/word_radices",
+  "anchor/rustdoc/sim-lib-discrete-comb/word_rank",
+  "anchor/rustdoc/sim-lib-discrete-comb/word_to_digits",
+  "anchor/rustdoc/sim-lib-discrete-comb/word_unrank",
+  "anchor/rustdoc/sim-lib-discrete-comb/words",
+]
+claims_specimens = [
+  "spec-test/sim-discrete/crates/sim-lib-discrete-comb/src/word",
+]
+
 [[route]]
 id = "route/add-discrete-domain-helper"
 task = "Add a discrete domain helper"
 audiences = ["code", "framework"]
 steps = [
   { feature = "feature/sim-discrete/discrete-algebra", why = "The discrete row owns algebra, graph, ranking, and spectral helpers." },
+]
+
+[[route]]
+id = "route/add-finite-enumeration-adapter"
+task = "Add a finite enumeration adapter"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-discrete/discrete-algebra", why = "The discrete stack owns combinatorics and rank integration." },
+  { feature = "feature/sim-discrete/finite-enumeration", why = "The finite enumeration row owns lazy words, digit/radix adapters, cyclic canonicalization, and longest-only selection." },
 ]
