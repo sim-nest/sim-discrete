@@ -37,6 +37,13 @@
       "summary": "Discrete rank adapters."
     },
     {
+      "crate_name": "sim_lib_discrete_search",
+      "group": "workspace",
+      "manifest": "crates/sim-lib-discrete-search/Cargo.toml",
+      "package": "sim-lib-discrete-search",
+      "summary": "Bounded deterministic discrete search."
+    },
+    {
       "crate_name": "sim_lib_discrete_spectral",
       "group": "workspace",
       "manifest": "crates/sim-lib-discrete-spectral/Cargo.toml",

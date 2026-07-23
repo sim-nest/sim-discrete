@@ -21,6 +21,11 @@
 {"kind":"recipe","path":"crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/setup.siml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-rank/recipes/book.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-search/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-search/recipes/01-basics/constrained-word/purpose.md"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-search/recipes/01-basics/constrained-word/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-search/recipes/01-basics/constrained-word/setup.siml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-search/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-spectral/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/purpose.md"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/recipe.toml"}

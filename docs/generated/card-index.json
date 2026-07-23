@@ -1,5 +1,5 @@
 {
-  "card_count": 21,
+  "card_count": 22,
   "cards": [
     {
       "id": "browse/catalog",
@@ -36,6 +36,12 @@
       "kind": "cookbook-recipe",
       "owner": "sim-lib-discrete-rank",
       "summary": "Rank-space descriptors for discrete objects."
+    },
+    {
+      "id": "cookbook/discrete-search",
+      "kind": "cookbook-recipe",
+      "owner": "sim-lib-discrete-search",
+      "summary": "Bounded deterministic search recipes."
     },
     {
       "id": "cookbook/discrete-spectral",

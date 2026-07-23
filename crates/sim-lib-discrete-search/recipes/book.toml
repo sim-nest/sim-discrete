@@ -1,0 +1,5 @@
+book = "discrete-search"
+title = "Discrete Search"
+summary = "Bounded deterministic search recipes."
+order = 336
+chapters = ["01-basics"]
