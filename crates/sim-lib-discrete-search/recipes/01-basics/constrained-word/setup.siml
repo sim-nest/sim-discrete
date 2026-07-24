@@ -1,0 +1,1 @@
+(discrete/search-constrained-word-demo ("A" "B" "C") 4 "A" "C" 8)

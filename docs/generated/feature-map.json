@@ -91,6 +91,19 @@
         },
         {
           "edges": [
+            "comb",
+            "dep:sim-lib-discrete-search"
+          ],
+          "name": "search",
+          "workspace_edges": [
+            {
+              "feature": null,
+              "package": "sim-lib-discrete-search"
+            }
+          ]
+        },
+        {
+          "edges": [
             "algebra",
             "dep:sim-lib-discrete-spectral"
           ],
@@ -125,6 +138,11 @@
       "features": [],
       "group": "workspace",
       "package": "sim-lib-discrete-rank"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-lib-discrete-search"
     },
     {
       "features": [],

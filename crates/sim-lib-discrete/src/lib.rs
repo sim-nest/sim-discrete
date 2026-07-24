@@ -9,6 +9,7 @@
 //! - `algebra`  -> the semiring spine and matrix-closure engine
 //! - `graph`    -> graph algorithms, MST, shortest paths, certificates
 //! - `comb`     -> combinatorics counts, enumerators, ordinals
+//! - `search`   -> bounded state-space search, receipts, and word fixtures
 //! - `spectral` -> FWHT and the Walsh-domain atlas
 //! - `rank`     -> optional rank adapters (requires `sim-lib-rank`)
 //!
@@ -53,6 +54,9 @@ pub use sim_lib_discrete_spectral as spectral;
 
 #[cfg(feature = "rank")]
 pub use sim_lib_discrete_rank as rank;
+
+#[cfg(feature = "search")]
+pub use sim_lib_discrete_search as search;
 
 #[cfg(all(test, feature = "citizen"))]
 mod citizen_tests;

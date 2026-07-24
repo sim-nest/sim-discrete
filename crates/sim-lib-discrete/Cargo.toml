@@ -20,6 +20,7 @@ sim-lib-discrete-algebra = { version = "0.1.0", optional = true, path = "../sim-
 sim-lib-discrete-comb = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-comb" }
 sim-lib-discrete-graph = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-graph" }
 sim-lib-discrete-rank = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-rank" }
+sim-lib-discrete-search = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-search" }
 sim-lib-discrete-spectral = { version = "0.1.0", optional = true, path = "../sim-lib-discrete-spectral" }
 sim-value = { optional = true, version = "0.1.0" }
 thiserror = "1"
@@ -41,6 +42,7 @@ full = ["algebra", "graph", "comb", "spectral"]
 graph = ["algebra", "dep:sim-lib-discrete-graph"]
 rank = ["algebra", "graph", "comb", "spectral", "dep:sim-lib-discrete-rank"]
 runtime = ["full", "dep:sim-lib-core"]
+search = ["comb", "dep:sim-lib-discrete-search"]
 spectral = ["algebra", "dep:sim-lib-discrete-spectral"]
 
 [lints]

@@ -1,0 +1,20 @@
+[package]
+name = "sim-lib-discrete-search"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Bounded deterministic discrete search."
+readme = "README.md"
+publish = true
+repository = "https://github.com/sim-nest/sim-discrete"
+homepage = "https://github.com/sim-nest/sim-discrete"
+
+[dependencies]
+sim-cookbook = { version = "0.1.0" }
+thiserror = "1"
+
+[build-dependencies]
+sim-cookbook = { version = "0.1.0" }
+
+[lints]
+workspace = true

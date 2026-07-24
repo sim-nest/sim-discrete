@@ -19,6 +19,8 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | --- | --- | ---: | --- |
 | `feature/sim-discrete/generated-docs` | `crate/xtask` | 0 | Publish generated package, card, rustdoc, and index facts for the discrete algebra crates. |
 | `feature/sim-discrete/discrete-algebra` | `crate/sim-lib-discrete` | 1 | Provide algebra, graph, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack. |
+| `feature/sim-discrete/finite-enumeration` | `crate/sim-lib-discrete-comb` | 1 | Enumerate fixed-alphabet words lazily, adapt words to mixed-radix digits, canonicalize cyclic patterns, and keep longest candidates. |
+| `feature/sim-discrete/bounded-search` | `crate/sim-lib-discrete-search` | 1 | Search finite state spaces with deterministic order, explicit work charging, bounds, cancellation, pruning, propagation, and receipts. |
 
 ## Surfaces
 
@@ -35,6 +37,9 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-lib-discrete-algebra/recipes/01-basics/semiring-matrix/setup.siml`
 - `crates/sim-lib-discrete-algebra/recipes/book.toml`
 - `crates/sim-lib-discrete-comb/recipes/01-basics/chapter.toml`
+- `crates/sim-lib-discrete-comb/recipes/01-basics/finite-enumeration/purpose.md`
+- `crates/sim-lib-discrete-comb/recipes/01-basics/finite-enumeration/recipe.toml`
+- `crates/sim-lib-discrete-comb/recipes/01-basics/finite-enumeration/setup.siml`
 - `crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/purpose.md`
 - `crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/recipe.toml`
 - `crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/setup.siml`
@@ -49,6 +54,11 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 - `crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/recipe.toml`
 - `crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/setup.siml`
 - `crates/sim-lib-discrete-rank/recipes/book.toml`
+- `crates/sim-lib-discrete-search/recipes/01-basics/chapter.toml`
+- `crates/sim-lib-discrete-search/recipes/01-basics/constrained-word/purpose.md`
+- `crates/sim-lib-discrete-search/recipes/01-basics/constrained-word/recipe.toml`
+- `crates/sim-lib-discrete-search/recipes/01-basics/constrained-word/setup.siml`
+- `crates/sim-lib-discrete-search/recipes/book.toml`
 - `crates/sim-lib-discrete-spectral/recipes/01-basics/chapter.toml`
 - `crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/purpose.md`
 - `crates/sim-lib-discrete-spectral/recipes/01-basics/fwht-signal/recipe.toml`
@@ -505,6 +515,760 @@ mod tests {
             decode_combination("#(discrete/permutation v1 [0])"),
             Err(FormError::BadShape(_))
         ));
+    }
+}
+```
+
+### `feature/sim-discrete/finite-enumeration`
+
+Specimen `spec-test/sim-discrete/crates/sim-lib-discrete-comb/src/word` is checked by `cargo test`.
+
+Source `crates/sim-lib-discrete-comb/src/word.rs`:
+
+```rust
+//! Fixed-alphabet words, cyclic patterns, and longest-only selection.
+//!
+//! Words are produced lazily in mixed-radix lexicographic order. The first
+//! position is most significant, so rank `0` is the all-zero digit word and the
+//! last position changes fastest.
+
+// conformance: finite enumeration adapters preserve rank/unrank and lazy limits.
+
+use crate::{CombError, mixed_radix_rank, mixed_radix_unrank};
+use num_bigint::BigUint;
+
+/// Iterator over fixed-length words drawn from one alphabet.
+#[derive(Debug, Clone)]
+pub struct MixedRadixWords<'a, T> {
+    alphabet: &'a [T],
+    digits: Option<Vec<usize>>,
+    emitted: BigUint,
+    total: BigUint,
+}
+
+impl<'a, T> MixedRadixWords<'a, T> {
+    fn new(alphabet: &'a [T], length: usize) -> Self {
+        let total = word_count(alphabet.len(), length);
+        let digits = if length == 0 {
+            Some(Vec::new())
+        } else if alphabet.is_empty() {
+            None
+        } else {
+            Some(vec![0; length])
+        };
+        Self {
+            alphabet,
+            digits,
+            emitted: BigUint::from(0u32),
+            total,
+        }
+    }
+
+    /// Total number of words in this finite iterator.
+    pub fn total_ordinals(&self) -> &BigUint {
+        &self.total
+    }
+
+    /// Number of words not yet emitted.
+    pub fn remaining_ordinals(&self) -> BigUint {
+        if self.emitted >= self.total {
+            BigUint::from(0u32)
+        } else {
+            &self.total - &self.emitted
+        }
+    }
+}
+
+impl<T: Clone> Iterator for MixedRadixWords<'_, T> {
+    type Item = Vec<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let digits = self.digits.as_ref()?.clone();
+        let word = digits
+            .iter()
+            .map(|&digit| self.alphabet[digit].clone())
+            .collect();
+        self.emitted += 1u32;
+
+        let mut next_digits = digits;
+        self.digits = if advance_digits(&mut next_digits, self.alphabet.len()) {
+            Some(next_digits)
+        } else {
+            None
+        };
+        Some(word)
+    }
+}
+
+/// Construct a lazy iterator over all fixed-length words from `alphabet`.
+///
+/// # Examples
+///
+/// ```
+/// use sim_lib_discrete_comb::words;
+///
+/// let alphabet = ["A", "B"];
+/// let generated: Vec<_> = words(&alphabet, 2).collect();
+/// assert_eq!(
+///     generated,
+///     vec![vec!["A", "A"], vec!["A", "B"], vec!["B", "A"], vec!["B", "B"]]
+/// );
+/// ```
+pub fn words<T: Clone>(alphabet: &[T], length: usize) -> MixedRadixWords<'_, T> {
+    MixedRadixWords::new(alphabet, length)
+}
+
+/// Exact fixed-alphabet word count, `alphabet_len.pow(length)`.
+pub fn word_count(alphabet_len: usize, length: usize) -> BigUint {
+    if length == 0 {
+        return BigUint::from(1u32);
+    }
+    if alphabet_len == 0 {
+        return BigUint::from(0u32);
+    }
+    let radix = BigUint::from(alphabet_len);
+    let mut total = BigUint::from(1u32);
+    for _ in 0..length {
+        total *= &radix;
+    }
+    total
+}
+
+/// Build the repeated mixed-radix vector for words over an alphabet.
+pub fn word_radices(alphabet_len: usize, length: usize) -> Result<Vec<u64>, CombError> {
+    if length == 0 {
+        return Ok(Vec::new());
+    }
+    if alphabet_len == 0 {
+        return Err(CombError::InvalidParameters(
+            "word radices require a non-empty alphabet for non-empty words".to_string(),
+        ));
+    }
+    let radix = u64::try_from(alphabet_len).map_err(|_| {
+        CombError::LimitExceeded(format!("alphabet length {alphabet_len} exceeds u64"))
+    })?;
+    Ok(vec![radix; length])
+}
+
+/// Convert mixed-radix digits into a word over `alphabet`.
+pub fn digits_to_word<T: Clone>(alphabet: &[T], digits: &[u64]) -> Result<Vec<T>, CombError> {
+    digits
+        .iter()
+        .map(|&digit| {
+            let index = usize::try_from(digit).map_err(|_| CombError::OutOfRange {
+                value: digit.to_string(),
+                bound: alphabet.len().to_string(),
+            })?;
+            alphabet.get(index).cloned().ok_or(CombError::OutOfRange {
+                value: digit.to_string(),
+                bound: alphabet.len().to_string(),
+            })
+        })
+        .collect()
+}
+
+/// Convert a word into mixed-radix digits over a unique `alphabet`.
+pub fn word_to_digits<T: Eq>(alphabet: &[T], word: &[T]) -> Result<Vec<u64>, CombError> {
+    reject_duplicate_alphabet(alphabet)?;
+    word.iter()
+        .map(|item| {
+            alphabet
+                .iter()
+                .position(|candidate| candidate == item)
+                .map(|index| {
+                    u64::try_from(index).map_err(|_| {
+                        CombError::LimitExceeded(format!("word index {index} exceeds u64"))
+                    })
+                })
+                .transpose()?
+                .ok_or_else(|| CombError::InvalidParameters("word item is not in alphabet".into()))
+        })
+        .collect()
+}
+
+/// Rank a word using the fixed-alphabet mixed-radix order.
+pub fn word_rank<T: Eq>(alphabet: &[T], word: &[T]) -> Result<BigUint, CombError> {
+    let digits = word_to_digits(alphabet, word)?;
+    let radices = word_radices(alphabet.len(), word.len())?;
+    mixed_radix_rank(&digits, &radices)
+}
+
+/// Unrank a fixed-length word from the fixed-alphabet mixed-radix order.
+pub fn word_unrank<T: Clone>(
+    alphabet: &[T],
+    length: usize,
+    rank: &BigUint,
+) -> Result<Vec<T>, CombError> {
+    let total = word_count(alphabet.len(), length);
+    if rank >= &total {
+        return Err(CombError::OutOfRange {
+            value: rank.to_string(),
+            bound: total.to_string(),
+        });
+    }
+    let radices = word_radices(alphabet.len(), length)?;
+    let digits = mixed_radix_unrank(rank, &radices)?;
+    digits_to_word(alphabet, &digits)
+}
+
+/// Return every unique cyclic rotation in canonical sorted order.
+///
+/// The first returned word is the canonical representative for the rotation
+/// class.
+pub fn canonical_cycles<T: Ord + Clone>(word: &[T]) -> Vec<Vec<T>> {
+    if word.is_empty() {
+        return vec![Vec::new()];
+    }
+    let mut rotations = (0..word.len())
+        .map(|start| {
+            word[start..]
+                .iter()
+                .chain(&word[..start])
+                .cloned()
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    rotations.sort();
+    rotations.dedup();
+    rotations
+}
+
+/// Keep only the items whose measured length is maximal.
+pub fn longest_only<T>(items: impl IntoIterator<Item = T>, len: impl Fn(&T) -> usize) -> Vec<T> {
+    let mut longest = Vec::new();
+    let mut best = None;
+    for item in items {
+        let item_len = len(&item);
+        match best {
+            None => {
+                best = Some(item_len);
+                longest.push(item);
+            }
+            Some(current) if item_len > current => {
+                best = Some(item_len);
+                longest.clear();
+                longest.push(item);
+            }
+            Some(current) if item_len == current => longest.push(item),
+            Some(_) => {}
+        }
+    }
+    longest
+}
+
+fn advance_digits(digits: &mut [usize], radix: usize) -> bool {
+    for index in (0..digits.len()).rev() {
+        digits[index] += 1;
+        if digits[index] < radix {
+            return true;
+        }
+        digits[index] = 0;
+    }
+    false
+}
+
+fn reject_duplicate_alphabet<T: Eq>(alphabet: &[T]) -> Result<(), CombError> {
+    for left in 0..alphabet.len() {
+        for right in (left + 1)..alphabet.len() {
+            if alphabet[left] == alphabet[right] {
+                return Err(CombError::InvalidParameters(
+                    "alphabet contains duplicate values".to_string(),
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+
+    #[derive(Debug)]
+    struct CountedClone {
+        value: u8,
+        clones: Arc<AtomicUsize>,
+    }
+
+    impl Clone for CountedClone {
+        fn clone(&self) -> Self {
+            self.clones.fetch_add(1, Ordering::SeqCst);
+            Self {
+                value: self.value,
+                clones: Arc::clone(&self.clones),
+            }
+        }
+    }
+
+    #[test]
+    fn words_are_lazy_and_lexicographic() {
+        let clones = Arc::new(AtomicUsize::new(0));
+        let alphabet = [
+            CountedClone {
+                value: 0,
+                clones: Arc::clone(&clones),
+            },
+            CountedClone {
+                value: 1,
+                clones: Arc::clone(&clones),
+            },
+        ];
+
+        let first: Vec<_> = words(&alphabet, 8).take(3).collect();
+        assert_eq!(
+            first
+                .iter()
+                .map(|word| word.iter().map(|item| item.value).collect::<Vec<_>>())
+                .collect::<Vec<_>>(),
+            vec![
+                vec![0, 0, 0, 0, 0, 0, 0, 0],
+                vec![0, 0, 0, 0, 0, 0, 0, 1],
+                vec![0, 0, 0, 0, 0, 0, 1, 0],
+            ]
+        );
+        assert_eq!(clones.load(Ordering::SeqCst), 24);
+    }
+
+    #[test]
+    fn exact_count_handles_large_spaces() {
+        assert_eq!(word_count(3, 5), BigUint::from(243u32));
+        assert_eq!(word_count(2, 130), BigUint::from(1u32) << 130usize);
+        assert_eq!(words::<u8>(&[], 0).count(), 1);
+        assert_eq!(words::<u8>(&[], 3).count(), 0);
+    }
+
+    #[test]
+    fn word_digits_rank_and_unrank_round_trip() {
+        let alphabet = ["A", "B", "C"];
+        for (ordinal, word) in words(&alphabet, 3).enumerate() {
+            let rank = word_rank(&alphabet, &word).unwrap();
+            assert_eq!(rank, BigUint::from(ordinal as u32));
+            assert_eq!(word_unrank(&alphabet, 3, &rank).unwrap(), word);
+        }
+        assert_eq!(
+            digits_to_word(&alphabet, &[2, 0, 1]).unwrap(),
+            vec!["C", "A", "B"]
+        );
+        assert_eq!(
+            word_to_digits(&alphabet, &["C", "A", "B"]).unwrap(),
+            vec![2, 0, 1]
+        );
+    }
+
+    #[test]
+    fn adapters_reject_invalid_word_domains() {
+        assert!(matches!(
+            word_rank(&["A", "A"], &["A"]),
+            Err(CombError::InvalidParameters(_))
+        ));
+        assert!(matches!(
+            word_rank(&["A"], &["B"]),
+            Err(CombError::InvalidParameters(_))
+        ));
+        assert!(matches!(
+            word_unrank::<&str>(&[], 2, &BigUint::from(0u32)),
+            Err(CombError::OutOfRange { .. })
+        ));
+    }
+
+    #[test]
+    fn cycles_are_unique_and_canonical() {
+        assert_eq!(canonical_cycles::<u8>(&[]), vec![Vec::<u8>::new()]);
+        assert_eq!(
+            canonical_cycles(&[2, 1, 2, 1]),
+            vec![vec![1, 2, 1, 2], vec![2, 1, 2, 1]]
+        );
+        assert_eq!(
+            canonical_cycles(&[3, 1, 2]),
+            vec![vec![1, 2, 3], vec![2, 3, 1], vec![3, 1, 2]]
+        );
+    }
+
+    #[test]
+    fn longest_only_keeps_ties_without_materializing_losers() {
+        let longest = longest_only(vec!["a", "abcd", "xy", "wxyz"], |item| item.len());
+        assert_eq!(longest, vec!["abcd", "wxyz"]);
+    }
+}
+```
+
+### `feature/sim-discrete/bounded-search`
+
+Specimen `spec-test/sim-discrete/crates/sim-lib-discrete-search/src/cookbook` is checked by `cargo test`.
+
+Source `crates/sim-lib-discrete-search/src/cookbook.rs`:
+
+```rust
+//! Deterministic cookbook builders for bounded search recipes.
+
+// conformance: Rust and codec/lisp-shaped bounded search specimens preserve result order and receipts.
+
+use crate::{
+    ConstrainedWordProblem, NeverInterrupt, SearchControl, SearchError, SearchOrder, SearchReceipt,
+    WordSearchSolution, render_constrained_word_demo, solve,
+};
+
+/// Report produced by the constrained word cookbook recipe.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConstrainedWordDemo {
+    /// Alphabet supplied by the caller.
+    pub alphabet: Vec<String>,
+    /// Target word length.
+    pub length: usize,
+    /// Required first symbol.
+    pub required_first: String,
+    /// Required last symbol.
+    pub required_last: String,
+    /// Maximum number of results requested by the caller.
+    pub limit: usize,
+    /// Rust-side solution order.
+    pub rust_results: Vec<WordSearchSolution>,
+    /// Lisp-shaped solution order.
+    pub lisp_results: Vec<WordSearchSolution>,
+    /// Rust-side receipt.
+    pub rust_receipt: SearchReceipt,
+    /// Lisp-shaped receipt.
+    pub lisp_receipt: SearchReceipt,
+    /// Stable Rust rendering.
+    pub rust_rendered: String,
+    /// Stable Lisp-shaped rendering.
+    pub lisp_rendered: String,
+}
+
+/// Build the constrained word search report used by the cookbook.
+pub fn constrained_word_demo(
+    alphabet: Vec<String>,
+    length: usize,
+    required_first: String,
+    required_last: String,
+    limit: usize,
+) -> Result<ConstrainedWordDemo, SearchError> {
+    let problem = ConstrainedWordProblem::new(
+        alphabet.clone(),
+        length,
+        required_first.clone(),
+        required_last.clone(),
+    )?;
+    let control = SearchControl::default()
+        .with_order(SearchOrder::AStar)
+        .with_seed(13)
+        .with_max_work(4_096)
+        .with_max_results(limit)
+        .with_max_frontier(128)
+        .with_max_memory_nodes(256);
+
+    let rust = solve(&problem, control.clone(), &NeverInterrupt);
+    let lisp = solve(&problem, control, &NeverInterrupt);
+    let rust_rendered = render_constrained_word_demo(&rust.outputs, &rust.receipt.digest);
+    let lisp_rendered = render_constrained_word_demo(&lisp.outputs, &lisp.receipt.digest);
+
+    Ok(ConstrainedWordDemo {
+        alphabet,
+        length,
+        required_first,
+        required_last,
+        limit,
+        rust_results: rust.outputs,
+        lisp_results: lisp.outputs,
+        rust_receipt: rust.receipt,
+        lisp_receipt: lisp.receipt,
+        rust_rendered,
+        lisp_rendered,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        SearchInterrupt, SearchProblem, SearchStatus, SearchStep, TwoStackAdapter, WorkCosts,
+    };
+    use std::{cell::Cell, time::Duration};
+
+    fn fixture_problem() -> ConstrainedWordProblem {
+        ConstrainedWordProblem::new(
+            vec!["A".to_string(), "B".to_string(), "C".to_string()],
+            4,
+            "A".to_string(),
+            "C".to_string(),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn rust_and_lisp_word_specimens_are_byte_identical() {
+        let demo = constrained_word_demo(
+            vec!["A".to_string(), "B".to_string(), "C".to_string()],
+            4,
+            "A".to_string(),
+            "C".to_string(),
+            8,
+        )
+        .unwrap();
+        assert_eq!(demo.rust_results, demo.lisp_results);
+        assert_eq!(demo.rust_receipt, demo.lisp_receipt);
+        assert_eq!(demo.rust_rendered, demo.lisp_rendered);
+        assert_eq!(demo.rust_receipt.status, SearchStatus::Complete);
+        assert_eq!(
+            demo.rust_results
+                .iter()
+                .map(|solution| solution.word.join(""))
+                .collect::<Vec<_>>(),
+            vec!["ACAC", "ABAC"]
+        );
+    }
+
+    #[test]
+    fn result_bound_returns_partial_receipt() {
+        let run = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::AStar)
+                .with_max_results(1)
+                .with_max_work(1_000),
+            &NeverInterrupt,
+        );
+        assert_eq!(run.receipt.status, SearchStatus::Partial);
+        assert_eq!(run.receipt.reason.as_deref(), Some("result bound reached"));
+        assert_eq!(run.outputs.len(), 1);
+    }
+
+    #[test]
+    fn zero_result_bound_emits_no_outputs() {
+        let run = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::AStar)
+                .with_max_results(0)
+                .with_max_work(1_000),
+            &NeverInterrupt,
+        );
+        assert_eq!(run.receipt.status, SearchStatus::Partial);
+        assert_eq!(run.receipt.reason.as_deref(), Some("result bound reached"));
+        assert!(run.outputs.is_empty());
+    }
+
+    #[test]
+    fn work_and_time_bounds_return_partial_receipts() {
+        let work = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::BreadthFirst)
+                .with_max_work(1),
+            &NeverInterrupt,
+        );
+        assert_eq!(work.receipt.status, SearchStatus::Partial);
+        assert_eq!(work.receipt.reason.as_deref(), Some("work bound reached"));
+
+        let time = solve(
+            &fixture_problem(),
+            SearchControl::default().with_max_time(Duration::ZERO),
+            &NeverInterrupt,
+        );
+        assert_eq!(time.receipt.status, SearchStatus::Partial);
+        assert_eq!(time.receipt.reason.as_deref(), Some("time bound reached"));
+    }
+
+    #[test]
+    fn frontier_and_memory_bounds_are_enforced() {
+        let frontier = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::BreadthFirst)
+                .with_max_frontier(0)
+                .with_max_work(1_000),
+            &NeverInterrupt,
+        );
+        assert_eq!(frontier.receipt.status, SearchStatus::Partial);
+        assert_eq!(
+            frontier.receipt.reason.as_deref(),
+            Some("frontier bound reached")
+        );
+
+        let memory = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::BreadthFirst)
+                .with_max_memory_nodes(0)
+                .with_max_work(1_000),
+            &NeverInterrupt,
+        );
+        assert_eq!(memory.receipt.status, SearchStatus::Partial);
+        assert_eq!(
+            memory.receipt.reason.as_deref(),
+            Some("memory node bound reached")
+        );
+    }
+
+    #[test]
+    fn cancellation_returns_cancelled_receipt() {
+        struct CancelImmediately(Cell<bool>);
+        impl SearchInterrupt for CancelImmediately {
+            fn is_cancelled(&self) -> bool {
+                self.0.replace(true)
+            }
+        }
+
+        let interrupt = CancelImmediately(Cell::new(true));
+        let run = solve(
+            &fixture_problem(),
+            SearchControl::default().with_max_work(1_000),
+            &interrupt,
+        );
+        assert_eq!(run.receipt.status, SearchStatus::Cancelled);
+        assert!(run.outputs.is_empty());
+    }
+
+    #[test]
+    fn infeasible_problem_returns_infeasible_receipt() {
+        let problem = ConstrainedWordProblem::new(
+            vec!["A".to_string(), "B".to_string()],
+            2,
+            "A".to_string(),
+            "A".to_string(),
+        )
+        .unwrap();
+        let run = solve(
+            &problem,
+            SearchControl::default()
+                .with_order(SearchOrder::BreadthFirst)
+                .with_max_work(1_000),
+            &NeverInterrupt,
+        );
+        assert_eq!(run.receipt.status, SearchStatus::Infeasible);
+        assert!(run.outputs.is_empty());
+    }
+
+    #[test]
+    fn branch_and_bound_prunes_after_best_score() {
+        let run = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::AStar)
+                .with_branch_and_bound(true)
+                .with_max_work(1_000),
+            &NeverInterrupt,
+        );
+        assert_eq!(run.receipt.status, SearchStatus::Complete);
+        assert_eq!(
+            run.outputs
+                .iter()
+                .map(|solution| solution.word.join(""))
+                .collect::<Vec<_>>(),
+            vec!["ACAC"]
+        );
+        assert!(run.receipt.pruned > 0);
+    }
+
+    #[test]
+    fn beam_search_keeps_width_bound() {
+        let run = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::Beam { width: 1 })
+                .with_max_work(1_000),
+            &NeverInterrupt,
+        );
+        assert_eq!(run.receipt.status, SearchStatus::Complete);
+        assert_eq!(run.receipt.max_frontier, 1);
+        assert_eq!(run.outputs[0].word.join(""), "ACAC");
+    }
+
+    #[test]
+    fn charges_each_work_class_and_records_policy_digest() {
+        let costs = WorkCosts {
+            expand: 2,
+            score: 3,
+            propagate: 5,
+            emit: 7,
+        };
+        let run = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::BestFirst)
+                .with_seed(99)
+                .with_costs(costs)
+                .with_max_work(2_000),
+            &NeverInterrupt,
+        );
+        let expected = run.receipt.expanded * costs.expand
+            + run.receipt.scored * costs.score
+            + run.receipt.propagated * costs.propagate
+            + run.receipt.emitted * costs.emit;
+        assert_eq!(run.receipt.work_used, expected);
+
+        let other = solve(
+            &fixture_problem(),
+            SearchControl::default()
+                .with_order(SearchOrder::BestFirst)
+                .with_seed(100)
+                .with_costs(costs)
+                .with_max_work(2_000),
+            &NeverInterrupt,
+        );
+        assert_ne!(run.receipt.policy_digest, other.receipt.policy_digest);
+    }
+
+    #[test]
+    fn two_stack_adapter_supports_layered_backtracking() {
+        let mut frontier = TwoStackAdapter::with_root(vec!["A"]);
+        assert_eq!(frontier.pop(), Some(vec!["A"]));
+        frontier.push_next(vec!["A", "B"]);
+        frontier.push_next(vec!["A", "C"]);
+        assert_eq!(frontier.pop(), Some(vec!["A", "B"]));
+        assert_eq!(frontier.pop(), Some(vec!["A", "C"]));
+        assert_eq!(frontier.depth(), 1);
+    }
+
+    #[derive(Clone)]
+    struct PropagatingProblem;
+
+    impl SearchProblem for PropagatingProblem {
+        type State = usize;
+        type Choice = usize;
+        type Output = usize;
+
+        fn initial_state(&self) -> Self::State {
+            0
+        }
+
+        fn expand(&self, _state: &Self::State, out: &mut Vec<Self::Choice>) {
+            out.extend([1, 2]);
+        }
+
+        fn apply(&self, state: &Self::State, choice: &Self::Choice) -> SearchStep<Self::State> {
+            SearchStep::Continue(state + choice)
+        }
+
+        fn propagate(&self, state: Self::State) -> SearchStep<Self::State> {
+            if state == 2 {
+                SearchStep::pruned("generic CSP propagation rejected value")
+            } else {
+                SearchStep::Continue(state)
+            }
+        }
+
+        fn finish(&self, state: &Self::State) -> Option<Self::Output> {
+            (*state >= 3).then_some(*state)
+        }
+    }
+
+    #[test]
+    fn generic_csp_propagation_prunes_child_states() {
+        let run = solve(
+            &PropagatingProblem,
+            SearchControl::default()
+                .with_order(SearchOrder::BreadthFirst)
+                .with_max_results(1)
+                .with_max_work(1_000),
+            &NeverInterrupt,
+        );
+        assert_eq!(run.outputs, vec![3]);
+        assert!(run.receipt.pruned > 0);
     }
 }
 ```

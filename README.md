@@ -1,8 +1,9 @@
 # sim-discrete
 
 Discrete math you can call from Rust: build and traverse graphs, count and rank
-combinations, run semiring matrix closures, and take Walsh-Hadamard spectra --
-each as a small library crate you add to your own project.
+combinations, run bounded state-space searches, run semiring matrix closures,
+and take Walsh-Hadamard spectra -- each as a small library crate you add to your
+own project.
 
 The SIM constellation ships a runtime and a `sim` CLI (`cargo install sim-run`;
 full walkthrough in sim-say), but these crates are usable on their own.
@@ -51,8 +52,8 @@ sim-discrete is the discrete-mathematics family of the SIM constellation. Where
 the kernel supplies the `Value`/`Expr`/`Shape`/codec contracts and sim-numbers
 supplies the number domains, tensors, and linear algebra, this repo supplies the
 discrete-math behavior: a semiring spine with matrix-closure engines, graph
-algorithms, exact combinatorics, Walsh-Hadamard spectral methods, and the rank
-adapters that bind them together.
+algorithms, exact combinatorics, bounded search, Walsh-Hadamard spectral
+methods, and the rank adapters that bind them together.
 
 The spine is the organizing idea. Graph reachability and all-pairs shortest
 paths are *derived* from semiring matrix closure rather than re-implemented per
@@ -64,8 +65,9 @@ the browse index, and the live `Lib`/`Cx` runtime registration.
 ## Crates
 
 A facade plus a layered set of behavior crates. The algebra spine is the root
-dependency; graph and spectral build on it, combinatorics stands alone, and rank
-is the single crate permitted to depend on `sim-lib-rank`.
+dependency; graph and spectral build on it, combinatorics and bounded search are
+standalone reusable owners, and rank is the single crate permitted to depend on
+`sim-lib-rank`.
 
 - `sim-lib-discrete` -- family facade that re-exports the sub-crates behind
   features and hosts the always-on `forms` (read-construct codecs) and `cards`
@@ -78,6 +80,10 @@ is the single crate permitted to depend on `sim-lib-rank`.
 - `sim-lib-discrete-comb` -- exact combinatorics: counting over `BigUint`, lazy
   enumerators, and canonical combinadic / Lehmer / mixed-radix rank-unrank
   helpers.
+- `sim-lib-discrete-search` -- bounded deterministic state-space search:
+  explicit work charging, cancellation, depth/breadth/best-first/A-star/beam
+  ordering, prefix pruning, branch-and-bound, generic CSP propagation, a
+  two-stack adapter, and completion receipts.
 - `sim-lib-discrete-graph` -- graph value types, traversal, connectivity, MST,
   shortest paths, the graph <-> matrix bridge, and certificate-producing
   verifiers, with all-pairs paths and reachability as thin wrappers over the
