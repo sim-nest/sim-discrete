@@ -1,7 +1,6 @@
 # sim-lib-discrete-search
 
-In one line: search a finite decision space with explicit budgets and a receipt
-that says exactly what happened.
+In one line: Search a finite decision space with explicit budgets and a receipt that says exactly what happened.
 
 ## What it gives you
 
