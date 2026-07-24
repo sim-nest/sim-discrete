@@ -10,6 +10,7 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | `sim-lib-discrete-comb` | `true` | `custom-build, lib` | Discrete combinatorics. |
 | `sim-lib-discrete-graph` | `true` | `custom-build, lib` | Discrete graph algorithms. |
 | `sim-lib-discrete-rank` | `true` | `custom-build, lib` | Discrete rank adapters. |
+| `sim-lib-discrete-search` | `true` | `custom-build, lib` | Bounded deterministic discrete search. |
 | `sim-lib-discrete-spectral` | `true` | `custom-build, lib` | Discrete spectral atlas. |
 | `sim-lib-discrete` | `true` | `custom-build, lib` | Discrete-math family facade. |
 | `xtask` | `false` | `bin` | SIM workspace package for xtask. |
