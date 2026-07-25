@@ -41,7 +41,10 @@ pub use error::GraphError;
 pub use graph::{Graph, Neighbor};
 pub use intring::IntRing;
 pub use mst::{MstWeight, kruskals_mst, prims_mst};
-pub use path::{PathResult, all_pairs_shortest_paths, bellman_ford, dijkstra, reachability};
+pub use path::{
+    PathResult, ShortestPath, all_pairs_shortest_paths, bellman_ford, dijkstra, reachability,
+    shortest_path,
+};
 pub use traversal::{Traversal, bfs, dfs};
 
 /// Cookbook recipes for this lib, embedded at build time.

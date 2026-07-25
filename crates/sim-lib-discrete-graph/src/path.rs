@@ -1,6 +1,7 @@
 //! Shortest paths: single-source Dijkstra and Bellman-Ford, checked all-pairs
 //! shortest paths, and reachability over the algebra spine's semiring closure.
 
+use crate::certificate::{ShortestPathCertificate, verify_shortest_paths};
 use crate::error::GraphError;
 use crate::graph::Graph;
 use core::cmp::Reverse;
@@ -14,6 +15,22 @@ pub struct PathResult<W> {
     pub distances: Vec<Option<W>>,
     /// `predecessors[v]` is the node `v` was reached from on a shortest path.
     pub predecessors: Vec<Option<usize>>,
+}
+
+/// One shortest path between two nodes, with a verifiable predecessor-tree
+/// certificate for the source.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ShortestPath<N> {
+    /// Source node.
+    pub source: usize,
+    /// Goal node.
+    pub goal: usize,
+    /// Node labels along the selected shortest path, including endpoints.
+    pub nodes: Vec<N>,
+    /// Total path weight, or `None` when the goal is unreachable.
+    pub distance: Option<i64>,
+    /// The shortest-path tree certificate produced by Bellman-Ford.
+    pub certificate: ShortestPathCertificate,
 }
 
 /// Directed out-arcs `(target, weight)` of `node`, honoring directedness.
@@ -149,6 +166,75 @@ pub fn bellman_ford<N>(
         },
         negative_cycle,
     ))
+}
+
+/// Return one shortest path and its reusable certificate.
+///
+/// The helper delegates search to Bellman-Ford and verifies the produced
+/// [`ShortestPathCertificate`] before returning. The graph may be directed or
+/// undirected and may contain negative edges, but negative cycles are rejected.
+///
+/// ```
+/// use sim_lib_discrete_graph::{Directedness, Graph, shortest_path};
+///
+/// let mut g = Graph::with_nodes(vec!["start", "via", "goal"], Directedness::Directed);
+/// g.add_edge(0, 1, 1).unwrap();
+/// g.add_edge(1, 2, 1).unwrap();
+/// g.add_edge(0, 2, 5).unwrap();
+///
+/// let path = shortest_path(&g, 0, 2).unwrap();
+/// assert_eq!(path.nodes, vec!["start", "via", "goal"]);
+/// assert_eq!(path.distance, Some(2));
+/// assert_eq!(path.certificate.predecessors[2], Some(1));
+/// ```
+pub fn shortest_path<N: Clone>(
+    graph: &Graph<N, i64>,
+    source: usize,
+    goal: usize,
+) -> Result<ShortestPath<N>, GraphError> {
+    graph.validate()?;
+    let n = graph.node_count();
+    for node in [source, goal] {
+        if node >= n {
+            return Err(GraphError::NodeOutOfRange { node, count: n });
+        }
+    }
+
+    let (paths, negative_cycle) = bellman_ford(graph, source)?;
+    if negative_cycle {
+        return Err(GraphError::NegativeCycle);
+    }
+    let certificate = ShortestPathCertificate {
+        source,
+        predecessors: paths.predecessors,
+    };
+    verify_shortest_paths(graph, &certificate)?;
+
+    let nodes = if paths.distances[goal].is_some() {
+        let mut reversed = Vec::new();
+        let mut current = goal;
+        loop {
+            reversed.push(graph.nodes[current].clone());
+            if current == source {
+                break;
+            }
+            current = certificate.predecessors[current].ok_or_else(|| {
+                GraphError::CertificateInvalid("path predecessor gap".to_string())
+            })?;
+        }
+        reversed.reverse();
+        reversed
+    } else {
+        Vec::new()
+    };
+
+    Ok(ShortestPath {
+        source,
+        goal,
+        nodes,
+        distance: paths.distances[goal],
+        certificate,
+    })
 }
 
 /// Checked all-pairs shortest paths.
@@ -299,5 +385,32 @@ mod tests {
         let r = reachability(&g).unwrap();
         assert_eq!(r.data[2], BoolRing(true)); // 0 reaches 2
         assert_eq!(r.data[6], BoolRing(false)); // 2 does not reach 0
+    }
+
+    #[test]
+    fn shortest_path_returns_verified_certificate() {
+        let mut g = Graph::with_nodes(vec!["start", "via", "goal"], Directedness::Directed);
+        g.add_edge(0, 1, 1).unwrap();
+        g.add_edge(1, 2, 1).unwrap();
+        g.add_edge(0, 2, 5).unwrap();
+
+        let path = shortest_path(&g, 0, 2).unwrap();
+
+        assert_eq!(path.nodes, vec!["start", "via", "goal"]);
+        assert_eq!(path.distance, Some(2));
+        assert_eq!(path.certificate.predecessors, vec![None, Some(0), Some(1)]);
+        verify_shortest_paths(&g, &path.certificate).unwrap();
+    }
+
+    #[test]
+    fn shortest_path_reports_unreachable_goal_with_certificate() {
+        let g = Graph::with_nodes(vec![0, 1], Directedness::Directed);
+
+        let path = shortest_path(&g, 0, 1).unwrap();
+
+        assert_eq!(path.nodes, Vec::<i32>::new());
+        assert_eq!(path.distance, None);
+        assert_eq!(path.certificate.predecessors, vec![None, None]);
+        verify_shortest_paths(&g, &path.certificate).unwrap();
     }
 }
