@@ -39,10 +39,10 @@ claims_surfaces = [
 [[feature]]
 id = "feature/sim-discrete/discrete-algebra"
 title = "Discrete algebra domain"
-summary = "Provide algebra, graph, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack."
+summary = "Provide algebra, graph, graph-path certificates, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack."
 owner = "crate/sim-lib-discrete"
 audiences = ["code", "framework"]
-guidance = "Use this row when selecting a reusable discrete mathematics representation or graph helper."
+guidance = "Use this row when selecting a reusable discrete mathematics representation, graph helper, or shortest-path certificate. Domain algorithms should return graph certificates over this owner instead of private traversal witnesses."
 claims_anchors = [
   "anchor/crate/sim-lib-discrete",
   "anchor/crate/sim-lib-discrete-algebra",
@@ -52,6 +52,7 @@ claims_anchors = [
   "anchor/crate/sim-lib-discrete-search",
   "anchor/crate/sim-lib-discrete-spectral",
   "anchor/runtime-lib/sim-lib-discrete/discrete-lib",
+  "anchor/rustdoc/sim-lib-discrete-graph/shortest_path",
 ]
 claims_specimens = [
   "spec-test/sim-discrete/crates/sim-lib-discrete/src/forms",

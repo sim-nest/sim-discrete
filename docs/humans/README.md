@@ -18,7 +18,7 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
 | `feature/sim-discrete/generated-docs` | `crate/xtask` | 0 | Publish generated package, card, rustdoc, and index facts for the discrete algebra crates. |
-| `feature/sim-discrete/discrete-algebra` | `crate/sim-lib-discrete` | 1 | Provide algebra, graph, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack. |
+| `feature/sim-discrete/discrete-algebra` | `crate/sim-lib-discrete` | 1 | Provide algebra, graph, graph-path certificates, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack. |
 | `feature/sim-discrete/finite-enumeration` | `crate/sim-lib-discrete-comb` | 1 | Enumerate fixed-alphabet words lazily, adapt words to mixed-radix digits, canonicalize cyclic patterns, and keep longest candidates. |
 | `feature/sim-discrete/bounded-search` | `crate/sim-lib-discrete-search` | 1 | Search finite state spaces with deterministic order, explicit work charging, bounds, cancellation, pruning, propagation, and receipts. |
 
