@@ -3,12 +3,14 @@
 //! Discrete graph algorithms.
 //!
 //! This crate hosts graph value types, traversal, connectivity, MST, shortest paths,
-//! the graph <-> matrix bridge, and certificate-producing verifiers. All-pairs
-//! shortest paths and reachability are thin wrappers over the algebra spine's
-//! semiring closure, never re-implemented here.
+//! minimum-cost bipartite assignment, the graph <-> matrix bridge, and
+//! certificate-producing verifiers. All-pairs shortest paths and reachability
+//! are thin wrappers over the algebra spine's semiring closure, never
+//! re-implemented here.
 //!
 //! Boundary: depends on `sim-lib-discrete-algebra`; never on `sim-lib-rank`.
 
+pub mod assignment;
 pub mod bridge;
 pub mod cards;
 pub mod certificate;
@@ -23,6 +25,10 @@ pub mod path;
 pub mod traversal;
 mod unionfind;
 
+pub use assignment::{
+    Assignment, AssignmentCertificate, AssignmentCost, AssignmentOperation, AssignmentPolicy,
+    CostMatrix, DoublingPolicy, VoiceCrossingPolicy, min_cost_assignment, verify_assignment,
+};
 pub use bridge::{
     GraphMatrixMap, MultiedgePolicy, graph_to_bool_adjacency, graph_to_incidence,
     graph_to_laplacian, graph_to_minplus_adjacency, graph_to_sparse_adjacency,

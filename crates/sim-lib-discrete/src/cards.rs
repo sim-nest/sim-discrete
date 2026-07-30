@@ -22,7 +22,7 @@ pub fn discrete_cards() -> &'static [DiscreteCard] {
         },
         DiscreteCard {
             key: "discrete/graph",
-            summary: "Graphs, MST, shortest paths, and certificates.",
+            summary: "Graphs, assignment, MST, shortest paths, and certificates.",
         },
         DiscreteCard {
             key: "discrete/combinatorics",

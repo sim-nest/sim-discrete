@@ -7,7 +7,7 @@
 //! so callers pull in only what they enable.
 //!
 //! - `algebra`  -> the semiring spine and matrix-closure engine
-//! - `graph`    -> graph algorithms, MST, shortest paths, certificates
+//! - `graph`    -> graph algorithms, assignment, MST, shortest paths, certificates
 //! - `comb`     -> combinatorics counts, enumerators, ordinals
 //! - `search`   -> bounded state-space search, receipts, and word fixtures
 //! - `spectral` -> FWHT and the Walsh-domain atlas

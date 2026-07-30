@@ -53,6 +53,9 @@ pub enum GraphError {
     /// A submitted certificate failed verification.
     #[error("certificate invalid: {0}")]
     CertificateInvalid(String),
+    /// An assignment matrix, policy, or submitted assignment was malformed.
+    #[error("invalid assignment: {0}")]
+    InvalidAssignment(String),
     /// A staged feature is not yet implemented.
     #[error("unsupported: {0}")]
     Unsupported(String),

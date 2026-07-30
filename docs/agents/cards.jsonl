@@ -12,6 +12,9 @@
 {"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/01-basics/rankable-values/setup.siml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-comb/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/min-cost-assignment/purpose.md"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/min-cost-assignment/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/min-cost-assignment/setup.siml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/purpose.md"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/setup.siml"}

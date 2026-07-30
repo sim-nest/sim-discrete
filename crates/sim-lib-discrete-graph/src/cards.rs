@@ -23,18 +23,20 @@ pub struct CardSpec {
 pub fn graph_cards() -> &'static [CardSpec] {
     const CARDS: &[CardSpec] = &[CardSpec {
         key: "discrete/graph",
-        summary: "Weighted graphs with traversal and connectivity.",
+        summary: "Weighted graphs, certified paths, and minimum-cost assignment.",
         operations: &[
             "bfs",
             "dfs",
             "connected-components",
             "weakly-connected-components",
             "strongly-connected-components",
+            "min-cost-assignment",
+            "verify-assignment",
         ],
-        data_forms: &["graph", "edge"],
+        data_forms: &["graph", "edge", "cost-matrix", "assignment-certificate"],
         limits: "Node identity is index-based; multiedges and self-loops are \
                  representable. Connectivity validates endpoints and fails closed \
-                 on out-of-range nodes.",
+                 on out-of-range nodes. Assignment uses exact checked additive costs.",
     }];
     CARDS
 }
