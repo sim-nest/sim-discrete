@@ -29,7 +29,7 @@
       "id": "cookbook/discrete-graph",
       "kind": "cookbook-recipe",
       "owner": "sim-lib-discrete-graph",
-      "summary": "Graph, edge, traversal, assignment, and certificate descriptors."
+      "summary": "Graph, traversal, certified assignment, staged paths, and sequence alignment."
     },
     {
       "id": "cookbook/discrete-rank",

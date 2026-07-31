@@ -1,1 +1,1 @@
-"minimum-cost assignment descriptor: rows=2 targets=3; insertion, deletion, doubling, and voice-crossing policies; deterministic ties; residual-dual or Bellman-table optimality certificate"
+"minimum-cost assignment descriptor: rectangular rows=2 targets=3; forbidden edges; insertion, deletion, doubling, voice-crossing, and work-control policies; deterministic ties; residual-dual or Bellman-table optimality certificate"

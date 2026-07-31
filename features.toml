@@ -39,10 +39,10 @@ claims_surfaces = [
 [[feature]]
 id = "feature/sim-discrete/discrete-algebra"
 title = "Discrete algebra domain"
-summary = "Provide algebra, certified minimum-cost assignment and graph paths, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack."
+summary = "Provide algebra, certified rectangular assignment, graph and staged paths, sequence alignment, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack."
 owner = "crate/sim-lib-discrete"
 audiences = ["code", "framework"]
-guidance = "Use this row when selecting a reusable discrete mathematics representation, minimum-cost bipartite assignment, graph helper, or shortest-path certificate. Assignment supports explicit insertion, deletion, doubling, and allow/forbid voice crossing, returns residual-dual or Bellman-table optimality evidence, and preserves equal-cost choices through documented stable ordering. Domain algorithms should return certificates over this owner instead of private traversal, permutation, or matching witnesses."
+guidance = "Use this row when selecting reusable discrete mathematics, rectangular minimum-cost assignment, staged dynamic programming, edit/DTW alignment, graph helpers, or path certificates. Assignment supports forbidden pairs plus explicit insertion, deletion, doubling, and voice-crossing policy. Layered paths return stable Bellman backpointers; alignment declares window, gap, boundary, and full/rolling memory policy. Every solver exposes checkable evidence, deterministic ties, finite-cost validation, and bounded cell/edge accounting. Domain libraries should compose these owners instead of private traversal, matching, DP, or alignment copies."
 claims_anchors = [
   "anchor/crate/sim-lib-discrete",
   "anchor/crate/sim-lib-discrete-algebra",
@@ -53,10 +53,15 @@ claims_anchors = [
   "anchor/crate/sim-lib-discrete-spectral",
   "anchor/runtime-lib/sim-lib-discrete/discrete-lib",
   "anchor/rustdoc/sim-lib-discrete-graph/min_cost_assignment",
+  "anchor/rustdoc/sim-lib-discrete-graph/algorithm-control",
+  "anchor/rustdoc/sim-lib-discrete-graph/dynamic_time_warp",
+  "anchor/rustdoc/sim-lib-discrete-graph/layered_shortest_path",
   "anchor/rustdoc/sim-lib-discrete-graph/shortest_path",
 ]
 claims_specimens = [
+  "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/alignment/tests",
   "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/assignment/tests",
+  "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/layered",
   "spec-test/sim-discrete/crates/sim-lib-discrete/src/forms",
 ]
 
@@ -112,7 +117,7 @@ id = "route/add-discrete-domain-helper"
 task = "Add a discrete domain helper"
 audiences = ["code", "framework"]
 steps = [
-  { feature = "feature/sim-discrete/discrete-algebra", why = "The discrete row owns algebra, certified assignment and graph paths, ranking, and spectral helpers." },
+  { feature = "feature/sim-discrete/discrete-algebra", why = "The discrete row owns algebra, certified rectangular assignment, staged paths, edit/DTW alignment, graph paths, ranking, and spectral helpers." },
 ]
 
 [[route]]

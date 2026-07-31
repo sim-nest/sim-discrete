@@ -1,5 +1,5 @@
 book = "discrete-graph"
 title = "Discrete Graph"
-summary = "Graph, edge, traversal, assignment, and certificate descriptors."
+summary = "Graph, traversal, certified assignment, staged paths, and sequence alignment."
 order = 333
-chapters = ["01-basics"]
+chapters = ["01-basics", "02-scenarios"]

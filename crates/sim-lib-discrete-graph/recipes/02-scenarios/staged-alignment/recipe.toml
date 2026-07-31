@@ -1,0 +1,8 @@
+id = "staged-alignment"
+title = "Certified staged path and alignment descriptor"
+codec = "lisp"
+setup = "setup.siml"
+purpose = "purpose.md"
+order = 10
+tags = ["discrete", "graph", "dynamic-programming", "alignment", "dtw", "certificate", "bounded", "sandbox-descriptor"]
+requires = ["discrete-graph", "codec/lisp"]

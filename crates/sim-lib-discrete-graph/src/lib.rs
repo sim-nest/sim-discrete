@@ -2,11 +2,13 @@
 #![deny(missing_docs)]
 //! Discrete graph algorithms.
 //!
-//! This crate hosts graph value types, traversal, connectivity, MST, shortest paths,
-//! minimum-cost bipartite assignment, the graph <-> matrix bridge, and
-//! certificate-producing verifiers. All-pairs shortest paths and reachability
-//! are thin wrappers over the algebra spine's semiring closure, never
-//! re-implemented here.
+//! This crate hosts graph value types, traversal, connectivity, MST, shortest
+//! paths, minimum-cost bipartite assignment, staged dynamic programming,
+//! edit/DTW alignment, the graph <-> matrix bridge, and certificate-producing
+//! verifiers. Expensive assignment and dynamic-programming APIs expose explicit
+//! cell/edge work, memory, deadline, and cancellation control. All-pairs
+//! shortest paths and reachability are thin wrappers over the algebra spine's
+//! semiring closure, never re-implemented here.
 //!
 //! Boundary: depends on `sim-lib-discrete-algebra`; never on `sim-lib-rank`.
 
@@ -36,7 +38,8 @@ pub use alignment::{
 };
 pub use assignment::{
     Assignment, AssignmentCertificate, AssignmentCost, AssignmentOperation, AssignmentPolicy,
-    CostMatrix, DoublingPolicy, VoiceCrossingPolicy, min_cost_assignment, verify_assignment,
+    CostMatrix, DoublingPolicy, VoiceCrossingPolicy, min_cost_assignment,
+    min_cost_assignment_with_control, verify_assignment,
 };
 pub use bridge::{
     GraphMatrixMap, MultiedgePolicy, graph_to_bool_adjacency, graph_to_incidence,

@@ -1,5 +1,8 @@
 //! Certified shortest paths through staged state layers.
 
+// conformance: layered dynamic programming verifies stable backpointer
+// certificates, forbidden transitions, work bounds, and finite costs.
+
 use core::cmp::Ordering;
 
 use crate::{

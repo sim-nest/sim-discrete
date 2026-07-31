@@ -18,6 +18,10 @@
 {"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/purpose.md"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/recipe.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/01-basics/tiny-graph/setup.siml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/02-scenarios/chapter.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/02-scenarios/staged-alignment/purpose.md"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/02-scenarios/staged-alignment/recipe.toml"}
+{"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/02-scenarios/staged-alignment/setup.siml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-graph/recipes/book.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-rank/recipes/01-basics/chapter.toml"}
 {"kind":"recipe","path":"crates/sim-lib-discrete-rank/recipes/01-basics/combination-space/purpose.md"}
