@@ -18,3 +18,7 @@ sim-cookbook = { version = "0.1.0" }
 
 [lints]
 workspace = true
+
+[[example]]
+name = "staged-alignment"
+path = "examples/staged_alignment.rs"

@@ -56,7 +56,9 @@ pub use connectivity::{
 pub use control::{
     AlgorithmControl, AlgorithmInterrupt, AlgorithmReceipt, AlgorithmWorkCosts, NeverInterrupt,
 };
-pub use cookbook::{TinyGraphDemo, tiny_graph_demo};
+pub use cookbook::{
+    AlignmentCompositionDemo, TinyGraphDemo, alignment_composition_demo, tiny_graph_demo,
+};
 pub use cost::FiniteCost;
 pub use edge::{Directedness, Edge};
 pub use error::GraphError;

@@ -1,4 +1,4 @@
-# Certified staged path and sequence alignment (descriptor)
+# Certified staged path and sequence alignment
 
 Documents the reusable finite dynamic-programming owner used by music,
 statistics, and analysis libraries. `layered_shortest_path` selects one state
@@ -14,7 +14,11 @@ memory bounds, deadlines, and cooperative cancellation. Integer overflow, NaN,
 infinity, illegal windows, unreachable endpoints, and tampered certificates all
 fail closed. Equal-cost transitions prefer the documented stable input order.
 
-The discrete graph classes are not loaded by the cookbook sandbox, so this
-recipe is a descriptor. Checked Rust fixtures in the crate exercise staged
-backpointers, forbidden transitions, full edit paths, subsequence alignment,
-rolling-memory evidence, bounded work, and certificate tampering.
+The runnable specimen composes both algorithms over generated finite data and
+verifies both certificates before printing their stable states, path, score,
+and work accounting. This is the reusable alignment seam for point-clustering,
+music, and analysis callers: clustering can supply states or centroids, while
+this owner supplies sequence alignment and staged optimization without a copied
+statistics-side DP loop. Checked fixtures in the crate additionally exercise
+forbidden transitions, subsequence alignment, rolling-memory evidence, bounded
+work, non-finite refusal, and certificate tampering.

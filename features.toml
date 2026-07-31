@@ -39,10 +39,10 @@ claims_surfaces = [
 [[feature]]
 id = "feature/sim-discrete/discrete-algebra"
 title = "Discrete algebra domain"
-summary = "Provide algebra, certified rectangular assignment, graph and staged paths, sequence alignment, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack."
+summary = "Provide algebra, certified rectangular assignment, graph and staged paths, composable sequence alignment, combinatorics, ranking, and spectral helpers as one reusable discrete-domain stack."
 owner = "crate/sim-lib-discrete"
 audiences = ["code", "framework"]
-guidance = "Use this row when selecting reusable discrete mathematics, rectangular minimum-cost assignment, staged dynamic programming, edit/DTW alignment, graph helpers, or path certificates. Assignment supports forbidden pairs plus explicit insertion, deletion, doubling, and voice-crossing policy. Layered paths return stable Bellman backpointers; alignment declares window, gap, boundary, and full/rolling memory policy. Every solver exposes checkable evidence, deterministic ties, finite-cost validation, and bounded cell/edge accounting. Domain libraries should compose these owners instead of private traversal, matching, DP, or alignment copies."
+guidance = "Use this row when selecting reusable discrete mathematics, rectangular minimum-cost assignment, staged dynamic programming, edit/DTW alignment, graph helpers, or path certificates. Assignment supports forbidden pairs plus explicit insertion, deletion, doubling, and voice-crossing policy. Layered paths return stable Bellman backpointers; alignment declares window, gap, boundary, and full/rolling memory policy. alignment_composition_demo is the checked adapter specimen for callers that select states or clusters and then align sequences. Every solver exposes checkable evidence, deterministic ties, finite-cost validation, and bounded cell/edge accounting. Domain libraries should compose these owners instead of private traversal, matching, DP, or alignment copies."
 claims_anchors = [
   "anchor/crate/sim-lib-discrete",
   "anchor/crate/sim-lib-discrete-algebra",
@@ -52,6 +52,7 @@ claims_anchors = [
   "anchor/crate/sim-lib-discrete-search",
   "anchor/crate/sim-lib-discrete-spectral",
   "anchor/runtime-lib/sim-lib-discrete/discrete-lib",
+  "anchor/rustdoc/sim-lib-discrete-graph/alignment_composition_demo",
   "anchor/rustdoc/sim-lib-discrete-graph/min_cost_assignment",
   "anchor/rustdoc/sim-lib-discrete-graph/algorithm-control",
   "anchor/rustdoc/sim-lib-discrete-graph/dynamic_time_warp",
@@ -61,6 +62,7 @@ claims_anchors = [
 claims_specimens = [
   "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/alignment/tests",
   "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/assignment/tests",
+  "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/cookbook",
   "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/layered",
   "spec-test/sim-discrete/crates/sim-lib-discrete/src/forms",
 ]
@@ -110,6 +112,18 @@ claims_anchors = [
 ]
 claims_specimens = [
   "spec-test/sim-discrete/crates/sim-lib-discrete-search/src/cookbook",
+]
+
+[[route]]
+id = "route/compose-staged-sequence-alignment"
+task = "Compose staged state selection with sequence alignment"
+audiences = ["code", "framework", "user"]
+steps = [
+  { feature = "feature/sim-discrete/discrete-algebra", why = "The discrete graph owner supplies certified layered shortest paths and DTW/edit alignment under shared work, memory, finite-cost, stable-tie, and verification policy." },
+  { specimen = "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/alignment/tests", why = "The alignment fixtures prove full and rolling certificates, windows, subsequence boundaries, work refusal, non-finite refusal, and tamper detection." },
+  { specimen = "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/layered", why = "The staged fixtures prove Bellman backpointers, forbidden transitions, bounded work, stable ties, and certificate verification." },
+  { specimen = "spec-test/sim-discrete/crates/sim-lib-discrete-graph/src/cookbook", why = "The checked composition invokes and verifies both engines and retains stable staged states plus DTW score, path length, cells, and edges without a copied domain-side DP loop." },
+  { specimen = "recipe/sim-discrete/crates/sim-lib-discrete-graph/02-scenarios/staged-alignment", why = "The public cargo-example recipe prints the same composition evidence for a human reader." },
 ]
 
 [[route]]

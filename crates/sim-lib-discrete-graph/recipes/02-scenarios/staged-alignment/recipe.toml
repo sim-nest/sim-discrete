@@ -1,8 +1,12 @@
 id = "staged-alignment"
 title = "Certified staged path and alignment descriptor"
-codec = "lisp"
-setup = "setup.siml"
+codec = "rust"
+setup = "main.rs"
 purpose = "purpose.md"
+expected = "expected.txt"
 order = 10
-tags = ["discrete", "graph", "dynamic-programming", "alignment", "dtw", "certificate", "bounded", "sandbox-descriptor"]
-requires = ["discrete-graph", "codec/lisp"]
+tags = ["discrete", "graph", "dynamic-programming", "alignment", "dtw", "certificate", "bounded", "composition"]
+requires = []
+harness = "cargo-example"
+package = "sim-lib-discrete-graph"
+example = "staged-alignment"
