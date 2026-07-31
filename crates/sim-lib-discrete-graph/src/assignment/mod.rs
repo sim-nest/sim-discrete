@@ -10,9 +10,13 @@
 mod flow;
 mod ordered;
 
-use core::fmt::Debug;
+use core::{cmp::Ordering, fmt::Debug};
 
-use crate::GraphError;
+use crate::{
+    AlgorithmControl, AlgorithmInterrupt, AlgorithmReceipt, FiniteCost, GraphError, NeverInterrupt,
+    control::WorkMeter,
+    cost::{add as add_cost, compare, validate},
+};
 
 /// Additive, ordered cost used by certified assignment.
 ///
@@ -20,13 +24,7 @@ use crate::GraphError;
 /// min-cost-flow residual edges and dual certificates. Implementations must
 /// provide exact arithmetic: saturating or wrapping implementations violate the
 /// certificate contract.
-pub trait AssignmentCost: Ord + Clone + Debug {
-    /// Additive identity.
-    fn zero() -> Self;
-
-    /// Exact checked addition.
-    fn checked_add(&self, rhs: &Self) -> Option<Self>;
-
+pub trait AssignmentCost: FiniteCost {
     /// Exact checked subtraction.
     fn checked_sub(&self, rhs: &Self) -> Option<Self>;
 }
@@ -35,14 +33,6 @@ macro_rules! integer_assignment_cost {
     ($($ty:ty),+ $(,)?) => {
         $(
             impl AssignmentCost for $ty {
-                fn zero() -> Self {
-                    0
-                }
-
-                fn checked_add(&self, rhs: &Self) -> Option<Self> {
-                    (*self).checked_add(*rhs)
-                }
-
                 fn checked_sub(&self, rhs: &Self) -> Option<Self> {
                     (*self).checked_sub(*rhs)
                 }
@@ -53,17 +43,54 @@ macro_rules! integer_assignment_cost {
 
 integer_assignment_cost!(i32, i64, i128, isize);
 
+macro_rules! float_assignment_cost {
+    ($($ty:ty),+ $(,)?) => {
+        $(
+            impl AssignmentCost for $ty {
+                fn checked_sub(&self, rhs: &Self) -> Option<Self> {
+                    let value = *self - *rhs;
+                    value.is_finite().then_some(value)
+                }
+            }
+        )+
+    };
+}
+
+float_assignment_cost!(f32, f64);
+
 /// Dense row-major costs between source and target items.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CostMatrix<C> {
     rows: usize,
     columns: usize,
-    values: Vec<C>,
+    values: Vec<Option<C>>,
 }
 
 impl<C> CostMatrix<C> {
     /// Builds a `rows` by `columns` matrix from row-major `values`.
     pub fn new(rows: usize, columns: usize, values: Vec<C>) -> Result<Self, GraphError> {
+        let expected = rows.checked_mul(columns).ok_or_else(|| {
+            GraphError::InvalidAssignment("cost matrix dimensions overflow".to_owned())
+        })?;
+        if values.len() != expected {
+            return Err(GraphError::InvalidAssignment(format!(
+                "cost matrix has {} values, expected {expected}",
+                values.len()
+            )));
+        }
+        Ok(Self {
+            rows,
+            columns,
+            values: values.into_iter().map(Some).collect(),
+        })
+    }
+
+    /// Builds a matrix whose `None` entries are forbidden assignment edges.
+    pub fn from_optional(
+        rows: usize,
+        columns: usize,
+        values: Vec<Option<C>>,
+    ) -> Result<Self, GraphError> {
         let expected = rows.checked_mul(columns).ok_or_else(|| {
             GraphError::InvalidAssignment("cost matrix dimensions overflow".to_owned())
         })?;
@@ -90,16 +117,56 @@ impl<C> CostMatrix<C> {
         self.columns
     }
 
-    /// Returns the cost at `(source, target)`, or `None` outside the matrix.
+    /// Returns the allowed cost at `(source, target)`.
+    ///
+    /// Returns `None` for both forbidden and out-of-range edges. Use
+    /// [`CostMatrix::is_forbidden`] when that distinction matters.
     pub fn get(&self, source: usize, target: usize) -> Option<&C> {
         if source >= self.rows || target >= self.columns {
             return None;
         }
-        self.values.get(source * self.columns + target)
+        self.values
+            .get(source * self.columns + target)
+            .and_then(Option::as_ref)
+    }
+
+    /// Marks an in-range edge forbidden and returns its previous cost.
+    pub fn forbid(&mut self, source: usize, target: usize) -> Result<Option<C>, GraphError> {
+        let index = self.index(source, target)?;
+        Ok(self.values[index].take())
+    }
+
+    /// Sets or restores an in-range edge cost.
+    pub fn allow(&mut self, source: usize, target: usize, cost: C) -> Result<(), GraphError> {
+        let index = self.index(source, target)?;
+        self.values[index] = Some(cost);
+        Ok(())
+    }
+
+    /// Whether an in-range edge is explicitly forbidden.
+    pub fn is_forbidden(&self, source: usize, target: usize) -> Result<bool, GraphError> {
+        let index = self.index(source, target)?;
+        Ok(self.values[index].is_none())
     }
 
     pub(super) fn value(&self, source: usize, target: usize) -> &C {
-        &self.values[source * self.columns + target]
+        self.values[source * self.columns + target]
+            .as_ref()
+            .expect("algorithm requests only allowed assignment edges")
+    }
+
+    pub(super) fn allowed(&self, source: usize, target: usize) -> bool {
+        self.values[source * self.columns + target].is_some()
+    }
+
+    fn index(&self, source: usize, target: usize) -> Result<usize, GraphError> {
+        if source >= self.rows || target >= self.columns {
+            return Err(GraphError::InvalidAssignment(format!(
+                "assignment edge ({source}, {target}) is outside {} by {} matrix",
+                self.rows, self.columns
+            )));
+        }
+        Ok(source * self.columns + target)
     }
 }
 
@@ -248,6 +315,8 @@ pub struct Assignment<C> {
     pub total_cost: C,
     /// Independently checkable optimality witness.
     pub certificate: AssignmentCertificate<C>,
+    /// Deterministic cell/edge work accounting for the solve.
+    pub receipt: AlgorithmReceipt,
 }
 
 /// Finds a minimum-cost assignment under insertion, deletion, doubling, and
@@ -260,10 +329,27 @@ pub fn min_cost_assignment<C: AssignmentCost>(
     costs: &CostMatrix<C>,
     policy: AssignmentPolicy<C>,
 ) -> Result<Assignment<C>, GraphError> {
+    min_cost_assignment_with_control(costs, policy, &AlgorithmControl::default(), &NeverInterrupt)
+}
+
+/// Finds a minimum-cost assignment under explicit work and cancellation
+/// control.
+pub fn min_cost_assignment_with_control<C: AssignmentCost>(
+    costs: &CostMatrix<C>,
+    policy: AssignmentPolicy<C>,
+    control: &AlgorithmControl,
+    interrupt: &dyn AlgorithmInterrupt,
+) -> Result<Assignment<C>, GraphError> {
     validate_inputs(costs, &policy)?;
+    let memory = assignment_memory_cells(costs)?;
+    let mut meter = WorkMeter::new(control, interrupt, memory)?;
     let assignment = match policy.voice_crossing {
-        VoiceCrossingPolicy::Allow => flow::solve(costs, &policy)?,
-        VoiceCrossingPolicy::Forbid => ordered::solve(costs, &policy)?,
+        VoiceCrossingPolicy::Allow => flow::solve(costs, &policy, &mut meter)?,
+        VoiceCrossingPolicy::Forbid => ordered::solve(costs, &policy, &mut meter)?,
+    };
+    let assignment = Assignment {
+        receipt: meter.finish(),
+        ..assignment
     };
     verify_assignment(costs, &policy, &assignment)?;
     Ok(assignment)
@@ -277,6 +363,7 @@ pub fn verify_assignment<C: AssignmentCost>(
     assignment: &Assignment<C>,
 ) -> Result<(), GraphError> {
     validate_inputs(costs, policy)?;
+    assignment.receipt.validate()?;
     validate_operations(costs, policy, assignment)?;
     match (&policy.voice_crossing, &assignment.certificate) {
         (VoiceCrossingPolicy::Allow, AssignmentCertificate::MinCostFlow { potentials }) => {
@@ -319,18 +406,19 @@ fn validate_inputs<C: AssignmentCost>(
         )));
     }
     let zero = C::zero();
-    if costs.values.iter().any(|cost| cost < &zero)
-        || policy.insertion_costs.iter().any(|cost| cost < &zero)
-        || policy.deletion_costs.iter().any(|cost| cost < &zero)
-        || matches!(
-            &policy.doubling,
-            DoublingPolicy::Allow { per_source }
-                if per_source.iter().any(|cost| cost < &zero)
-        )
-    {
-        return Err(GraphError::InvalidAssignment(
-            "assignment costs must be non-negative".to_owned(),
-        ));
+    for cost in costs.values.iter().flatten() {
+        validate_non_negative(cost, &zero, "assignment matrix")?;
+    }
+    for cost in &policy.insertion_costs {
+        validate_non_negative(cost, &zero, "assignment insertion")?;
+    }
+    for cost in &policy.deletion_costs {
+        validate_non_negative(cost, &zero, "assignment deletion")?;
+    }
+    if let DoublingPolicy::Allow { per_source } = &policy.doubling {
+        for cost in per_source {
+            validate_non_negative(cost, &zero, "assignment doubling")?;
+        }
     }
     Ok(())
 }
@@ -458,6 +546,9 @@ fn register_pair<C: AssignmentCost>(
     if source >= costs.rows || target >= costs.columns {
         return certificate_error("match endpoint is out of range");
     }
+    if !costs.allowed(source, target) {
+        return certificate_error("match uses a forbidden assignment edge");
+    }
     if target_owner[target].replace(Some(source)).is_some() {
         return certificate_error("target is assigned more than once");
     }
@@ -477,8 +568,7 @@ fn register_pair<C: AssignmentCost>(
 }
 
 pub(super) fn add<C: AssignmentCost>(left: &C, right: &C, context: &str) -> Result<C, GraphError> {
-    left.checked_add(right)
-        .ok_or_else(|| GraphError::WeightOverflow(context.to_owned()))
+    add_cost(left, right, context)
 }
 
 pub(super) fn sub<C: AssignmentCost>(left: &C, right: &C, context: &str) -> Result<C, GraphError> {
@@ -488,6 +578,41 @@ pub(super) fn sub<C: AssignmentCost>(left: &C, right: &C, context: &str) -> Resu
 
 pub(super) fn certificate_error<T>(message: &str) -> Result<T, GraphError> {
     Err(GraphError::CertificateInvalid(message.to_owned()))
+}
+
+pub(super) fn less<C: AssignmentCost>(
+    left: &C,
+    right: &C,
+    context: &str,
+) -> Result<bool, GraphError> {
+    Ok(compare(left, right, context)? == Ordering::Less)
+}
+
+fn validate_non_negative<C: AssignmentCost>(
+    cost: &C,
+    zero: &C,
+    context: &str,
+) -> Result<(), GraphError> {
+    validate(cost, context)?;
+    if compare(cost, zero, context)? == Ordering::Less {
+        return Err(GraphError::InvalidAssignment(
+            "assignment costs must be non-negative".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
+fn assignment_memory_cells<C>(costs: &CostMatrix<C>) -> Result<usize, GraphError> {
+    costs
+        .rows
+        .checked_add(1)
+        .and_then(|rows| {
+            costs
+                .columns
+                .checked_add(1)
+                .and_then(|columns| rows.checked_mul(columns))
+        })
+        .ok_or_else(|| GraphError::InvalidAssignment("assignment dimensions overflow".to_owned()))
 }
 
 #[cfg(test)]

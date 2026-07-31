@@ -1,8 +1,8 @@
 use super::{
     Assignment, AssignmentCertificate, AssignmentCost, AssignmentOperation, AssignmentPolicy,
-    CostMatrix, add, certificate_error,
+    CostMatrix, add, certificate_error, less,
 };
-use crate::GraphError;
+use crate::{AlgorithmReceipt, GraphError, control::WorkMeter};
 
 #[derive(Clone)]
 struct Candidate<C> {
@@ -20,25 +20,29 @@ enum Action {
 pub(super) fn solve<C: AssignmentCost>(
     costs: &CostMatrix<C>,
     policy: &AssignmentPolicy<C>,
+    meter: &mut WorkMeter<'_>,
 ) -> Result<Assignment<C>, GraphError> {
-    let suffix_costs = build_table(costs, policy)?;
+    let suffix_costs = build_table(costs, policy, Some(meter))?;
     let operations = reconstruct(costs, policy, &suffix_costs)?;
     Ok(Assignment {
         operations,
         total_cost: suffix_costs[0][0].clone(),
         certificate: AssignmentCertificate::OrderPreserving { suffix_costs },
+        receipt: empty_receipt(),
     })
 }
 
 fn build_table<C: AssignmentCost>(
     costs: &CostMatrix<C>,
     policy: &AssignmentPolicy<C>,
+    mut meter: Option<&mut WorkMeter<'_>>,
 ) -> Result<Vec<Vec<C>>, GraphError> {
     let rows = costs.rows();
     let columns = costs.columns();
     let mut table = vec![vec![C::zero(); columns + 1]; rows + 1];
 
     for source in (0..rows).rev() {
+        charge_cell(&mut meter)?;
         table[source][columns] = add(
             &policy.deletion_costs[source],
             &table[source + 1][columns],
@@ -46,6 +50,7 @@ fn build_table<C: AssignmentCost>(
         )?;
     }
     for target in (0..columns).rev() {
+        charge_cell(&mut meter)?;
         table[rows][target] = add(
             &policy.insertion_costs[target],
             &table[rows][target + 1],
@@ -54,9 +59,23 @@ fn build_table<C: AssignmentCost>(
     }
     for source in (0..rows).rev() {
         for target in (0..columns).rev() {
-            table[source][target] = candidates(source, target, costs, policy, &table)?
-                .into_iter()
-                .min_by(|left, right| left.cost.cmp(&right.cost))
+            charge_cell(&mut meter)?;
+            let candidates = candidates(source, target, costs, policy, &table, &mut meter)?;
+            let mut best: Option<Candidate<C>> = None;
+            for candidate in candidates {
+                let is_better = match &best {
+                    Some(current) => less(
+                        &candidate.cost,
+                        &current.cost,
+                        "ordered assignment candidate",
+                    )?,
+                    None => true,
+                };
+                if is_better {
+                    best = Some(candidate);
+                }
+            }
+            table[source][target] = best
                 .expect("non-terminal assignment state has candidates")
                 .cost;
         }
@@ -70,6 +89,7 @@ fn candidates<C: AssignmentCost>(
     costs: &CostMatrix<C>,
     policy: &AssignmentPolicy<C>,
     table: &[Vec<C>],
+    meter: &mut Option<&mut WorkMeter<'_>>,
 ) -> Result<Vec<Candidate<C>>, GraphError> {
     let mut candidates = Vec::new();
     let max_span = if policy.doubling_cost(source).is_some() {
@@ -79,6 +99,10 @@ fn candidates<C: AssignmentCost>(
     };
     let mut pair_total = C::zero();
     for span in 1..=max_span {
+        charge_edge(meter)?;
+        if !costs.allowed(source, target + span - 1) {
+            break;
+        }
         pair_total = add(
             &pair_total,
             costs.value(source, target + span - 1),
@@ -103,19 +127,25 @@ fn candidates<C: AssignmentCost>(
         });
     }
     candidates.push(Candidate {
-        cost: add(
-            &policy.deletion_costs[source],
-            &table[source + 1][target],
-            "ordered assignment deletion",
-        )?,
+        cost: {
+            charge_edge(meter)?;
+            add(
+                &policy.deletion_costs[source],
+                &table[source + 1][target],
+                "ordered assignment deletion",
+            )?
+        },
         action: Action::Delete,
     });
     candidates.push(Candidate {
-        cost: add(
-            &policy.insertion_costs[target],
-            &table[source][target + 1],
-            "ordered assignment insertion",
-        )?,
+        cost: {
+            charge_edge(meter)?;
+            add(
+                &policy.insertion_costs[target],
+                &table[source][target + 1],
+                "ordered assignment insertion",
+            )?
+        },
         action: Action::Insert,
     });
     Ok(candidates)
@@ -146,7 +176,7 @@ fn reconstruct<C: AssignmentCost>(
             source += 1;
             continue;
         }
-        let choice = candidates(source, target, costs, policy, table)?
+        let choice = candidates(source, target, costs, policy, table, &mut None)?
             .into_iter()
             .find(|candidate| candidate.cost == table[source][target])
             .expect("table value comes from one candidate");
@@ -206,7 +236,7 @@ pub(super) fn verify<C: AssignmentCost>(
     {
         return certificate_error("ordered certificate table has the wrong dimensions");
     }
-    let expected = build_table(costs, policy)?;
+    let expected = build_table(costs, policy, None)?;
     if suffix_costs != expected {
         return certificate_error("ordered certificate violates the Bellman recurrence");
     }
@@ -218,4 +248,29 @@ pub(super) fn verify<C: AssignmentCost>(
         return certificate_error("ordered assignment violates deterministic tie-breaking");
     }
     Ok(())
+}
+
+fn charge_cell(meter: &mut Option<&mut WorkMeter<'_>>) -> Result<(), GraphError> {
+    if let Some(meter) = meter.as_deref_mut() {
+        meter.cell()?;
+    }
+    Ok(())
+}
+
+fn charge_edge(meter: &mut Option<&mut WorkMeter<'_>>) -> Result<(), GraphError> {
+    if let Some(meter) = meter.as_deref_mut() {
+        meter.edge()?;
+    }
+    Ok(())
+}
+
+fn empty_receipt() -> AlgorithmReceipt {
+    AlgorithmReceipt {
+        work_used: 0,
+        cells: 0,
+        edges: 0,
+        peak_memory_cells: 0,
+        cell_work: 1,
+        edge_work: 1,
+    }
 }

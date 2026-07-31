@@ -66,6 +66,63 @@ fn insertion_deletion_and_doubling_are_jointly_optimized() {
 }
 
 #[test]
+fn rectangular_assignment_skips_forbidden_edges_with_stable_ties() {
+    let mut costs = matrix(&[&[1, 1, 9], &[1, 1, 2]]);
+    costs.forbid(0, 0).expect("in range");
+    let policy = AssignmentPolicy::new(vec![20; 3], vec![20; 2]).with_doubling(vec![0, 0]);
+
+    let first = min_cost_assignment(&costs, policy.clone()).expect("assignment");
+    let replay = min_cost_assignment(&costs, policy.clone()).expect("replay");
+
+    assert_eq!(first, replay);
+    assert_eq!(first.total_cost, 4);
+    assert_eq!(
+        first.operations,
+        vec![
+            AssignmentOperation::Match {
+                source: 0,
+                target: 1,
+                cost: 1,
+            },
+            AssignmentOperation::Match {
+                source: 1,
+                target: 0,
+                cost: 1,
+            },
+            AssignmentOperation::Double {
+                source: 1,
+                target: 2,
+                cost: 2,
+            },
+        ]
+    );
+    verify_assignment(&costs, &policy, &first).expect("certificate");
+}
+
+#[test]
+fn assignment_control_charges_edges_and_enforces_bounds() {
+    let costs = matrix(&[&[1, 2], &[2, 1]]);
+    let policy = AssignmentPolicy::new(vec![5; 2], vec![5; 2]);
+    let bounded = AlgorithmControl::default().with_max_work(1);
+
+    assert!(matches!(
+        min_cost_assignment_with_control(&costs, policy.clone(), &bounded, &NeverInterrupt),
+        Err(GraphError::ControlStopped(_))
+    ));
+
+    let assignment = min_cost_assignment_with_control(
+        &costs,
+        policy,
+        &AlgorithmControl::default(),
+        &NeverInterrupt,
+    )
+    .expect("controlled assignment");
+    assert!(assignment.receipt.edges > 0);
+    assert_eq!(assignment.receipt.cells, 0);
+    assignment.receipt.validate().expect("receipt");
+}
+
+#[test]
 fn crossing_policy_changes_the_certified_optimum() {
     let costs = matrix(&[&[50, 1], &[1, 50]]);
     let base = AssignmentPolicy::new(vec![100; 2], vec![100; 2]);
@@ -170,5 +227,11 @@ fn malformed_costs_and_overflow_fail_closed() {
     assert!(matches!(
         min_cost_assignment(&costs, policy),
         Err(GraphError::WeightOverflow(_))
+    ));
+
+    let non_finite = CostMatrix::new(1, 1, vec![f64::NAN]).expect("matrix shape");
+    assert!(matches!(
+        min_cost_assignment(&non_finite, AssignmentPolicy::new(vec![1.0], vec![1.0])),
+        Err(GraphError::NonFiniteCost(_))
     ));
 }

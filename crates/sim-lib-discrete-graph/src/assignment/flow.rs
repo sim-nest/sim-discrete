@@ -1,8 +1,8 @@
 use super::{
     Assignment, AssignmentCertificate, AssignmentCost, AssignmentOperation, AssignmentPolicy,
-    CostMatrix, add, certificate_error, sub,
+    CostMatrix, add, certificate_error, less, sub,
 };
-use crate::GraphError;
+use crate::{AlgorithmReceipt, GraphError, control::WorkMeter};
 
 #[derive(Copy, Clone, Debug)]
 struct ArcRef {
@@ -105,7 +105,7 @@ struct Layout<C> {
     source_first: Vec<ArcRef>,
     source_double: Vec<Option<ArcRef>>,
     insertion: Vec<ArcRef>,
-    pairs: Vec<Vec<ArcRef>>,
+    pairs: Vec<Vec<Option<ArcRef>>>,
     target_sink: Vec<ArcRef>,
     deletion_base: C,
 }
@@ -156,12 +156,14 @@ fn build<C: AssignmentCost>(
         pairs.push(
             (0..costs.columns())
                 .map(|target| {
-                    network.add_arc(
-                        row_base + row,
-                        target_base + target,
-                        1,
-                        costs.value(row, target).clone(),
-                    )
+                    costs.allowed(row, target).then(|| {
+                        network.add_arc(
+                            row_base + row,
+                            target_base + target,
+                            1,
+                            costs.value(row, target).clone(),
+                        )
+                    })
                 })
                 .collect(),
         );
@@ -186,11 +188,13 @@ fn build<C: AssignmentCost>(
 pub(super) fn solve<C: AssignmentCost>(
     costs: &CostMatrix<C>,
     policy: &AssignmentPolicy<C>,
+    meter: &mut WorkMeter<'_>,
 ) -> Result<Assignment<C>, GraphError> {
     let mut layout = build(costs, policy)?;
     let mut flow_cost = C::zero();
     for _ in 0..costs.columns() {
-        let (distances, predecessors) = shortest_residual_path(&layout.network, layout.source)?;
+        let (distances, predecessors) =
+            shortest_residual_path(&layout.network, layout.source, Some(meter))?;
         let distance = distances[layout.sink].as_ref().ok_or_else(|| {
             GraphError::InvalidAssignment("assignment network cannot cover every target".to_owned())
         })?;
@@ -206,17 +210,19 @@ pub(super) fn solve<C: AssignmentCost>(
         &flow_cost,
         "assignment objective total",
     )?;
-    let potentials = residual_potentials(&layout.network)?;
+    let potentials = residual_potentials(&layout.network, Some(meter))?;
     Ok(Assignment {
         operations,
         total_cost,
         certificate: AssignmentCertificate::MinCostFlow { potentials },
+        receipt: empty_receipt(),
     })
 }
 
 fn shortest_residual_path<C: AssignmentCost>(
     network: &Network<C>,
     source: usize,
+    mut meter: Option<&mut WorkMeter<'_>>,
 ) -> Result<ResidualPath<C>, GraphError> {
     let nodes = network.adjacency.len();
     let mut distances = vec![None; nodes];
@@ -229,13 +235,16 @@ fn shortest_residual_path<C: AssignmentCost>(
                 continue;
             };
             for (index, edge) in network.adjacency[from].iter().enumerate() {
+                charge_edge(&mut meter)?;
                 if edge.capacity == 0 {
                     continue;
                 }
                 let candidate = add(&distance, &edge.cost, "assignment path relaxation")?;
                 if distances[edge.to]
                     .as_ref()
-                    .is_none_or(|current| candidate < *current)
+                    .map(|current| less(&candidate, current, "assignment path relaxation ordering"))
+                    .transpose()?
+                    .unwrap_or(true)
                 {
                     distances[edge.to] = Some(candidate);
                     predecessors[edge.to] = Some(ArcRef { from, index });
@@ -250,18 +259,26 @@ fn shortest_residual_path<C: AssignmentCost>(
     Ok((distances, predecessors))
 }
 
-fn residual_potentials<C: AssignmentCost>(network: &Network<C>) -> Result<Vec<C>, GraphError> {
+fn residual_potentials<C: AssignmentCost>(
+    network: &Network<C>,
+    mut meter: Option<&mut WorkMeter<'_>>,
+) -> Result<Vec<C>, GraphError> {
     let nodes = network.adjacency.len();
     let mut potentials = vec![C::zero(); nodes];
     for iteration in 0..nodes {
         let mut changed = false;
         for from in 0..nodes {
             for edge in &network.adjacency[from] {
+                charge_edge(&mut meter)?;
                 if edge.capacity == 0 {
                     continue;
                 }
                 let candidate = add(&potentials[from], &edge.cost, "assignment dual relaxation")?;
-                if candidate < potentials[edge.to] {
+                if less(
+                    &candidate,
+                    &potentials[edge.to],
+                    "assignment dual relaxation ordering",
+                )? {
                     potentials[edge.to] = candidate;
                     changed = true;
                     if iteration + 1 == nodes {
@@ -287,7 +304,9 @@ fn operations_from_flow<C: AssignmentCost>(
     let mut operations = Vec::new();
     for source in 0..costs.rows() {
         let targets = (0..costs.columns())
-            .filter(|target| layout.network.flow(layout.pairs[source][*target]) == 1)
+            .filter(|target| {
+                layout.pairs[source][*target].is_some_and(|arc| layout.network.flow(arc) == 1)
+            })
             .collect::<Vec<_>>();
         if let Some((&first, rest)) = targets.split_first() {
             operations.push(AssignmentOperation::Match {
@@ -344,7 +363,12 @@ pub(super) fn verify<C: AssignmentCost>(
             AssignmentOperation::Match { source, target, .. }
             | AssignmentOperation::Double { source, target, .. } => {
                 source_counts[*source] += 1;
-                layout.network.send(layout.pairs[*source][*target], 1)?;
+                let arc = layout.pairs[*source][*target].ok_or_else(|| {
+                    GraphError::CertificateInvalid(
+                        "assignment uses a forbidden pair edge".to_owned(),
+                    )
+                })?;
+                layout.network.send(arc, 1)?;
             }
             AssignmentOperation::Insert { target, .. } => inserted[*target] = true,
             AssignmentOperation::Delete { .. } => {}
@@ -383,10 +407,28 @@ pub(super) fn verify<C: AssignmentCost>(
                 &potentials[edge.to],
                 "assignment reduced cost",
             )?;
-            if reduced < C::zero() {
+            if less(&reduced, &C::zero(), "assignment reduced-cost ordering")? {
                 return certificate_error("dual potential admits a negative reduced-cost edge");
             }
         }
     }
     Ok(())
+}
+
+fn charge_edge(meter: &mut Option<&mut WorkMeter<'_>>) -> Result<(), GraphError> {
+    if let Some(meter) = meter.as_deref_mut() {
+        meter.edge()?;
+    }
+    Ok(())
+}
+
+fn empty_receipt() -> AlgorithmReceipt {
+    AlgorithmReceipt {
+        work_used: 0,
+        cells: 0,
+        edges: 0,
+        peak_memory_cells: 0,
+        cell_work: 1,
+        edge_work: 1,
+    }
 }
