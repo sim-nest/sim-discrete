@@ -1,6 +1,6 @@
 [package]
 name = "sim-lib-discrete-spectral"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 license = "MPL-2.0"
 description = "Discrete spectral atlas."
@@ -11,7 +11,7 @@ homepage = "https://github.com/sim-nest/sim-discrete"
 
 [dependencies]
 sim-cookbook = { version = "0.1.0" }
-sim-lib-discrete-algebra = { version = "0.1.0", path = "../sim-lib-discrete-algebra" }
+sim-lib-discrete-algebra = { version = "0.2.0", path = "../sim-lib-discrete-algebra" }
 thiserror = "1"
 [build-dependencies]
 sim-cookbook = { version = "0.1.0" }
