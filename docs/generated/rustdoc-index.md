@@ -9,5 +9,6 @@
 | `sim-lib-discrete-comb` | `workspace` | Discrete combinatorics. |
 | `sim-lib-discrete-graph` | `workspace` | Discrete graph algorithms. |
 | `sim-lib-discrete-rank` | `workspace` | Discrete rank adapters. |
+| `sim-lib-discrete-search` | `workspace` | Bounded deterministic discrete search. |
 | `sim-lib-discrete-spectral` | `workspace` | Discrete spectral atlas. |
 | `xtask` | `workspace` | SIM workspace package for xtask. |

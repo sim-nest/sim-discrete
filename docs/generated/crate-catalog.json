@@ -38,6 +38,7 @@
       "root": "crates/sim-lib-discrete-graph",
       "target_kinds": [
         "custom-build",
+        "example",
         "lib"
       ]
     },

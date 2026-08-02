@@ -8,12 +8,13 @@
 | `cookbook/discrete` | `cookbook-recipe` | `sim-lib-discrete` | Runtime-facing discrete matrix, graph, and transform descriptors. |
 | `cookbook/discrete-algebra` | `cookbook-recipe` | `sim-lib-discrete-algebra` | Small semiring and matrix-view descriptors. |
 | `cookbook/discrete-comb` | `cookbook-recipe` | `sim-lib-discrete-comb` | Combination and permutation descriptors. |
-| `cookbook/discrete-graph` | `cookbook-recipe` | `sim-lib-discrete-graph` | Graph, edge, traversal, and certificate descriptors. |
+| `cookbook/discrete-graph` | `cookbook-recipe` | `sim-lib-discrete-graph` | Graph, traversal, certified assignment, staged paths, and sequence alignment. |
 | `cookbook/discrete-rank` | `cookbook-recipe` | `sim-lib-discrete-rank` | Rank-space descriptors for discrete objects. |
+| `cookbook/discrete-search` | `cookbook-recipe` | `sim-lib-discrete-search` | Bounded deterministic search recipes. |
 | `cookbook/discrete-spectral` | `cookbook-recipe` | `sim-lib-discrete-spectral` | FWHT, Walsh signature, and spectral descriptor examples. |
 | `discrete/algebra` | `static-card` | `workspace` | Semiring matrices, powers, and Kleene closure (the spine). |
 | `discrete/combinatorics` | `static-card` | `workspace` | Exact counts, lazy enumerators, and canonical ordinals. |
-| `discrete/graph` | `static-card` | `workspace` | Graphs, MST, shortest paths, and certificates. |
+| `discrete/graph` | `static-card` | `workspace` | Graphs, assignment, MST, shortest paths, and certificates. |
 | `discrete/music-adapter` | `static-card` | `workspace` | FWHT-based melody analysis (consumes the spectral atlas). |
 | `discrete/rank` | `static-card` | `workspace` | Finite rank spaces, metrics, and invariant grade compilers. |
 | `discrete/spectral` | `static-card` | `workspace` | FWHT, XOR/subset convolution, and Walsh signatures. |

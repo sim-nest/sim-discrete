@@ -4,10 +4,11 @@
 
 | Package | Group | Features | Workspace feature edges |
 | --- | --- | ---: | ---: |
-| `sim-lib-discrete` | `workspace` | 9 | 5 |
+| `sim-lib-discrete` | `workspace` | 10 | 6 |
 | `sim-lib-discrete-algebra` | `workspace` | 0 | 0 |
 | `sim-lib-discrete-comb` | `workspace` | 0 | 0 |
 | `sim-lib-discrete-graph` | `workspace` | 0 | 0 |
 | `sim-lib-discrete-rank` | `workspace` | 0 | 0 |
+| `sim-lib-discrete-search` | `workspace` | 0 | 0 |
 | `sim-lib-discrete-spectral` | `workspace` | 0 | 0 |
 | `xtask` | `workspace` | 0 | 0 |

@@ -8,7 +8,7 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | --- | --- | --- | --- |
 | `sim-lib-discrete-algebra` | `true` | `custom-build, lib` | Discrete algebra spine. |
 | `sim-lib-discrete-comb` | `true` | `custom-build, lib` | Discrete combinatorics. |
-| `sim-lib-discrete-graph` | `true` | `custom-build, lib` | Discrete graph algorithms. |
+| `sim-lib-discrete-graph` | `true` | `custom-build, example, lib` | Discrete graph algorithms. |
 | `sim-lib-discrete-rank` | `true` | `custom-build, lib` | Discrete rank adapters. |
 | `sim-lib-discrete-search` | `true` | `custom-build, lib` | Bounded deterministic discrete search. |
 | `sim-lib-discrete-spectral` | `true` | `custom-build, lib` | Discrete spectral atlas. |
