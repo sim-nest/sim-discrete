@@ -29,7 +29,7 @@
       "id": "cookbook/discrete-graph",
       "kind": "cookbook-recipe",
       "owner": "sim-lib-discrete-graph",
-      "summary": "Graph, edge, traversal, and certificate descriptors."
+      "summary": "Graph, traversal, certified assignment, staged paths, and sequence alignment."
     },
     {
       "id": "cookbook/discrete-rank",
@@ -65,7 +65,7 @@
       "id": "discrete/graph",
       "kind": "static-card",
       "owner": "workspace",
-      "summary": "Graphs, MST, shortest paths, and certificates."
+      "summary": "Graphs, assignment, MST, shortest paths, and certificates."
     },
     {
       "id": "discrete/music-adapter",

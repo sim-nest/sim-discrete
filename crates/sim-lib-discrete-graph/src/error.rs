@@ -42,6 +42,15 @@ pub enum GraphError {
     /// A graph weight sum or path relaxation overflowed its representation.
     #[error("graph weight overflow: {0}")]
     WeightOverflow(String),
+    /// A floating-point or user-defined cost was not finite or comparable.
+    #[error("non-finite graph cost: {0}")]
+    NonFiniteCost(String),
+    /// An algorithm control was internally inconsistent.
+    #[error("invalid graph algorithm control: {0}")]
+    InvalidControl(String),
+    /// A work, memory, time, or cancellation bound stopped the algorithm.
+    #[error("graph algorithm stopped by control: {0}")]
+    ControlStopped(String),
     /// A node index passed to an algorithm was outside the node range.
     #[error("node {node} out of range: node count {count}")]
     NodeOutOfRange {
@@ -53,6 +62,9 @@ pub enum GraphError {
     /// A submitted certificate failed verification.
     #[error("certificate invalid: {0}")]
     CertificateInvalid(String),
+    /// An assignment matrix, policy, or submitted assignment was malformed.
+    #[error("invalid assignment: {0}")]
+    InvalidAssignment(String),
     /// A staged feature is not yet implemented.
     #[error("unsupported: {0}")]
     Unsupported(String),
