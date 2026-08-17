@@ -1,6 +1,6 @@
 [package]
 name = "sim-lib-discrete"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 license = "MPL-2.0"
 description = "Discrete-math family facade."
@@ -14,8 +14,8 @@ sim-citizen = { optional = true, version = "0.2.0" }
 sim-cookbook = { version = "0.2.0" }
 sim-citizen-derive = { optional = true, version = "0.2.0" }
 sim-codec = { version = "0.1.7" }
-sim-kernel = { version = "0.2.0" }
-sim-lib-core = { optional = true, version = "0.1.0" }
+sim-kernel = { version = "0.2.1" }
+sim-lib-core = { optional = true, version = "0.2.0" }
 sim-lib-discrete-algebra = { version = "0.2.0", optional = true, path = "../sim-lib-discrete-algebra" }
 sim-lib-discrete-comb = { version = "0.2.0", optional = true, path = "../sim-lib-discrete-comb" }
 sim-lib-discrete-graph = { version = "0.2.0", optional = true, path = "../sim-lib-discrete-graph" }
@@ -30,7 +30,7 @@ sim-cookbook = { version = "0.2.0" }
 
 [dev-dependencies]
 sim-codec-lisp = { version = "0.2.0" }
-sim-kernel = { version = "0.2.0", features = ["test-support"] }
+sim-kernel = { version = "0.2.1", features = ["test-support"] }
 sim-test-support = { version = "0.1.0" }
 
 [features]
