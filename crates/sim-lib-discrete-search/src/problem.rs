@@ -38,6 +38,11 @@ pub trait SearchInterrupt {
     /// Return true when the caller wants the run to stop with a cancellation
     /// receipt.
     fn is_cancelled(&self) -> bool;
+
+    /// Elapsed monotonic time supplied by the caller's model or platform.
+    fn elapsed(&self) -> std::time::Duration {
+        std::time::Duration::ZERO
+    }
 }
 
 /// Interrupt source that never cancels.

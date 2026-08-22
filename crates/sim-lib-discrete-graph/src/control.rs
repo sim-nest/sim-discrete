@@ -1,6 +1,6 @@
 //! Work, memory, deadline, and cancellation control for graph algorithms.
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use crate::GraphError;
 
@@ -62,6 +62,11 @@ impl AlgorithmControl {
 pub trait AlgorithmInterrupt {
     /// Returns true when the active computation should stop.
     fn is_cancelled(&self) -> bool;
+
+    /// Elapsed monotonic time supplied by the caller's model or platform.
+    fn elapsed(&self) -> Duration {
+        Duration::ZERO
+    }
 }
 
 /// Cancellation source that never interrupts.
@@ -121,7 +126,6 @@ impl AlgorithmReceipt {
 pub(crate) struct WorkMeter<'a> {
     control: &'a AlgorithmControl,
     interrupt: &'a dyn AlgorithmInterrupt,
-    started: Instant,
     receipt: AlgorithmReceipt,
 }
 
@@ -147,7 +151,6 @@ impl<'a> WorkMeter<'a> {
         Ok(Self {
             control,
             interrupt,
-            started: Instant::now(),
             receipt: AlgorithmReceipt {
                 work_used: 0,
                 cells: 0,
@@ -192,7 +195,7 @@ impl<'a> WorkMeter<'a> {
         if self
             .control
             .max_time
-            .is_some_and(|limit| self.started.elapsed() >= limit)
+            .is_some_and(|limit| self.interrupt.elapsed() >= limit)
         {
             return Err(GraphError::ControlStopped(
                 "algorithm time bound reached".to_owned(),
