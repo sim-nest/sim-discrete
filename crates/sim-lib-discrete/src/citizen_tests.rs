@@ -174,7 +174,11 @@ fn assert_descriptor_round_trip(form: &str) {
 }
 
 fn codec_cx() -> Cx {
-    let mut cx = Cx::new(Arc::new(EagerPolicy), Arc::new(DefaultFactory));
+    let mut cx = Cx::new(
+        Arc::new(EagerPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(0xcab0_1ea6_a2a5_887c),
+    );
     cx.grant(read_construct_capability());
     cx.load_lib(&sim_citizen::CitizenLib::namespace("discrete"))
         .unwrap();

@@ -1,6 +1,6 @@
 //! Deterministic bounded search engine.
 
-use std::{cmp::Ordering, time::Instant};
+use std::cmp::Ordering;
 
 use crate::{
     SearchControl, SearchInterrupt, SearchOrder, SearchProblem, SearchReceipt, SearchRun,
@@ -36,7 +36,6 @@ where
         };
     }
 
-    let started = Instant::now();
     let mut metrics = Metrics::default();
     let mut outputs = Vec::new();
     let mut next_sequence = 0u64;
@@ -69,7 +68,7 @@ where
             });
         }
         if let Some(max_time) = control.max_time
-            && started.elapsed() >= max_time
+            && interrupt.elapsed() >= max_time
         {
             break Some(Stop {
                 status: SearchStatus::Partial,
