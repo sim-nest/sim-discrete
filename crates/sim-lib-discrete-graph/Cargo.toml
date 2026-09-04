@@ -1,6 +1,6 @@
 [package]
 name = "sim-lib-discrete-graph"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 license = "MPL-2.0"
 description = "Discrete graph algorithms."
@@ -10,11 +10,11 @@ repository = "https://github.com/sim-nest/sim-discrete"
 homepage = "https://github.com/sim-nest/sim-discrete"
 
 [dependencies]
-sim-cookbook = { version = "0.3.0" }
-sim-lib-discrete-algebra = { version = "0.3.0", path = "../sim-lib-discrete-algebra" }
+sim-cookbook = { version = "0.4.0" }
+sim-lib-discrete-algebra = { version = "0.4.0", path = "../sim-lib-discrete-algebra" }
 thiserror = "1"
 [build-dependencies]
-sim-cookbook-build = { version = "0.1.0" }
+sim-cookbook-build = { version = "0.2.0" }
 
 [lints]
 workspace = true
