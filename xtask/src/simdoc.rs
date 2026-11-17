@@ -46,6 +46,10 @@ fn locate_simdoc_manifest(repo_root: &Path) -> Result<PathBuf, String> {
         // manifest. That manifest refuses the simdoc verb.
         return isolated_manifest_from_hint(Path::new(&path));
     }
+    locate_sibling_simdoc(repo_root)
+}
+
+fn locate_sibling_simdoc(repo_root: &Path) -> Result<PathBuf, String> {
     let isolated = repo_root
         .parent()
         .unwrap_or(repo_root)
@@ -83,31 +87,45 @@ fn isolated_manifest_from_hint(hint: &Path) -> Result<PathBuf, String> {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
     use super::*;
 
     fn isolated_rel() -> PathBuf {
         Path::new("crates").join("simdoc").join("Cargo.toml")
     }
 
-    fn repo_root() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .expect("xtask lives in the repository root")
-            .to_path_buf()
+    fn scratch_root() -> PathBuf {
+        static SEQ: AtomicU64 = AtomicU64::new(0);
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock")
+            .as_nanos();
+        let seq = SEQ.fetch_add(1, Ordering::Relaxed);
+        let root = env::temp_dir().join(format!(
+            "sim-discrete-simdoc-{}-{}-{}",
+            std::process::id(),
+            nanos,
+            seq
+        ));
+        fs::create_dir_all(&root).expect("scratch");
+        root
+    }
+
+    fn write_isolated(tooling: &Path) -> PathBuf {
+        let manifest = tooling.join(isolated_rel());
+        fs::create_dir_all(manifest.parent().expect("parent")).expect("dirs");
+        fs::write(&manifest, "[package]\nname = \"simdoc\"\n").expect("manifest");
+        fs::write(tooling.join("Cargo.toml"), "[workspace]\n").expect("workspace");
+        manifest
     }
 
     #[test]
     fn tooling_hints_resolve_to_the_isolated_encoder() {
-        let repo = repo_root();
-        let selected = locate_simdoc_manifest(&repo).expect("isolated encoder");
-        assert!(selected.ends_with(isolated_rel()));
-        assert!(selected.with_file_name("Cargo.lock").is_file());
-
-        let tooling = selected
-            .parent()
-            .and_then(Path::parent)
-            .and_then(Path::parent)
-            .expect("crates/simdoc lives in the tooling checkout");
+        let tooling = scratch_root();
+        let selected = write_isolated(&tooling);
         assert_eq!(
             isolated_manifest_from_hint(&tooling.join("Cargo.toml")).expect("workspace hint"),
             selected
@@ -117,17 +135,38 @@ mod tests {
             selected
         );
         assert_eq!(
-            isolated_manifest_from_hint(tooling).expect("checkout hint"),
+            isolated_manifest_from_hint(&tooling).expect("checkout hint"),
             selected
         );
+        fs::remove_dir_all(tooling).expect("cleanup");
     }
 
     #[test]
     fn missing_tooling_hint_is_an_error() {
-        let missing = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("no-such-tooling")
-            .join("Cargo.toml");
+        let root = scratch_root();
+        let missing = root.join("no-such-tooling").join("Cargo.toml");
         let error = isolated_manifest_from_hint(&missing).expect_err("missing hint");
         assert!(error.contains("does not locate crates/simdoc/Cargo.toml"));
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn sibling_checkout_resolves_when_the_encoder_exists() {
+        let parent = scratch_root();
+        let manifest = write_isolated(&parent.join("sim-tooling"));
+        let repo = parent.join("sim-discrete");
+        fs::create_dir_all(&repo).expect("repo");
+        assert_eq!(locate_sibling_simdoc(&repo).expect("sibling"), manifest);
+        fs::remove_dir_all(parent).expect("cleanup");
+    }
+
+    #[test]
+    fn missing_sibling_checkout_is_an_error() {
+        let parent = scratch_root();
+        let repo = parent.join("sim-discrete");
+        fs::create_dir_all(&repo).expect("repo");
+        let error = locate_sibling_simdoc(&repo).expect_err("missing sibling");
+        assert!(error.contains("set SIMDOC_TOOLING_MANIFEST"));
+        fs::remove_dir_all(parent).expect("cleanup");
     }
 }
